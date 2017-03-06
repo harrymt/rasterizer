@@ -12,11 +12,8 @@
 #include "TestModel.h"
 
 #define FOCAL 2.0f
-#define TRUE_SCREEN_WIDTH 750
-#define TRUE_SCREEN_HEIGHT 750
-#define SSAA 8
-#define SCREEN_WIDTH TRUE_SCREEN_WIDTH * SSAA
-#define SCREEN_HEIGHT TRUE_SCREEN_HEIGHT * SSAA
+#define SCREEN_WIDTH 750
+#define SCREEN_HEIGHT 750
 #define FOCAL_LENGTH SCREEN_HEIGHT / FOCAL
 
 constexpr float pi = atan(1.0);
@@ -25,6 +22,7 @@ constexpr float pi = atan(1.0);
 using glm::vec2;
 using glm::vec3;
 using glm::mat3;
+using glm::ivec3;
 
 using std::cout;
 using std::vector;
