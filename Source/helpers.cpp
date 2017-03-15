@@ -154,3 +154,15 @@ vec2 convertTo2D(vec3 coords)
     float v = f * coords.y / coords.z + SCREEN_HEIGHT / 2;
     return vec2(u, v);
 }
+
+void drawLineSDL(SDL_Surface* surface, ivec2 a, ivec2 b, vec3 color)
+{
+    ivec2 delta = glm::abs(a - b);
+    int pixels = glm::max(delta.x, delta.y) + 1;
+    vector<ivec2> line(pixels);
+    interpolateVector(a, b, line);
+    for (auto& point : line)
+    {
+        PutPixelSDL(surface, point.x, point.y, color);
+    }
+}

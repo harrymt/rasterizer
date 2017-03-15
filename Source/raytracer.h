@@ -49,4 +49,7 @@ void printVector(const char* name, vec3 v);
 bool triangleIntersection(vec3& point);
 void update();
 void draw();
+
+void drawLineSDL(SDL_Surface* surface, ivec2 a, ivec2 b, vec3 color);
+
 #endif //RAYTRACER_INCLUDE
