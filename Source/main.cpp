@@ -128,13 +128,7 @@ void draw()
         vertices[1] = triangles[i].v1;
         vertices[2] = triangles[i].v2;
 
-        for(int v = 0; v < 3; ++v)
-        {
-            glm::ivec2 projPos;
-            vertexShader(vertices[v], projPos);
-            vec3 color(1,1,1);
-            PutPixelSDL(screen, projPos.x, projPos.y, color);
-        }
+        drawPolygonEdges(vertices);
     }
 
     if (SDL_MUSTLOCK(screen)) SDL_UnlockSurface(screen);
