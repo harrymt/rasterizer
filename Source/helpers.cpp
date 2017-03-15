@@ -123,14 +123,15 @@ float interpolate_f(float start, float end, float step, float max)
     return (end - start) * (step / (max - 1)) + start;
 }
 
-void interpolate_v(vec3 a, vec3 b, vector<vec3> &result)
+void interpolateVector(ivec2 a, ivec2 b, vector<ivec2>& result)
 {
-    float max_size = result.size();
-    for (float i = 0; i < max_size; i++)
+    int n = result.size();
+    vec2 step = vec2(b - a) / float(std::max(n-1, 1));
+    vec2 current(a);
+    for (int i = 0; i < n; ++i)
     {
-        result[i].x = interpolate_f(a.x, b.x, i, max_size);
-        result[i].y = interpolate_f(a.y, b.y, i, max_size);
-        result[i].z = interpolate_f(a.z, b.z, i, max_size);
+        result[i] = current;
+        current += step;
     }
 }
 

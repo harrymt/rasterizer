@@ -120,7 +120,7 @@ void draw()
     SDL_FillRect(screen, 0, 0);
     if(SDL_MUSTLOCK(screen)) SDL_LockSurface(screen);
 
-    // #pragma omp parallel for
+    //#pragma omp parallel for
     for(unsigned int i = 0; i < triangles.size(); ++i)
     {
         vector<vec3> vertices(3);

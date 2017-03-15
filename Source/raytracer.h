@@ -23,6 +23,7 @@ using glm::vec2;
 using glm::vec3;
 using glm::mat3;
 using glm::ivec3;
+using glm::ivec2;
 
 using std::cout;
 using std::vector;
@@ -38,7 +39,7 @@ struct Intersection
 vec3 directLight(const Intersection &i, Triangle closestTriangle, const vector<Triangle>& triangles);
 float interpolate_f(float start, float end, float step, float max);
 void interpolate(float start, float end, vector<float>& result);
-void interpolate_v(vec3 a, vec3 b, vector<vec3> &result);
+void interpolateVector(ivec2 a, ivec2 b, vector<ivec2>& result);
 int rand_i(int min, int max);
 float rand_f();
 vec2 convertTo2D(vec3 coords);
