@@ -164,6 +164,7 @@ void drawLineSDL(SDL_Surface* surface, const ivec2& a, const ivec2& b, const vec
     interpolateVector(a, b, line);
     for (auto& point : line)
     {
+        //if (point.x < 0 || point.y < 0 || point.x > SCREEN_WIDTH || point.y > SCREEN_HEIGHT) continue;
         PutPixelSDL(surface, point.x, point.y, colour);
     }
 }
@@ -174,6 +175,10 @@ void drawPolygonEdges(const vector<vec3>& vertices)
     vector<ivec2> projected_vertices(num_vertices);
     vec3 colour(1, 1, 1);
     
+    // Loop jamming optimisation applied
+    // Data dependency with j-1 and j
+    // partial unrolling performed
+    
     vertexShader(vertices[0], projected_vertices[0]);
     for (int i = 0, j = 1; i < num_vertices-1; ++i, ++j)
     {
@@ -181,6 +186,40 @@ void drawPolygonEdges(const vector<vec3>& vertices)
         drawLineSDL(screen, projected_vertices[i], projected_vertices[j], colour);
     }
     drawLineSDL(screen, projected_vertices[num_vertices-1], projected_vertices[0], colour);
+}
+
+void computePolygonRows(const vector<ivec2>& vertex_pixels, vector<ivec2>& left_pixels, vector<ivec2>& right_pixels)
+{
+    int min = +std::numeric_limits<int>::max();
+    int max = -std::numeric_limits<int>::max();
+    for (auto& vertex : vertex_pixels)
+    {
+        min = MIN(min, vertex.y);
+        max = MAX(max, vertex.y);
+    }
+    int nrows = max - min + 1;
     
-    //for (int i = 0; 
+    left_pixels.resize(nrows);
+    right_pixels.resize(nrows);
+    
+    for (int i = 0; i < nrows; ++i)
+    {
+        left_pixels[i].x = +std::numeric_limits<int>::max();
+        right_pixels[i].x = -std::numeric_limits<int>::max();
+    }
+
+    vector<ivec2> edge(nrows);
+    int num_vertices = vertex_pixels.size();
+    for (int i = 0, j = 1; i < num_vertices; ++i, ++j)
+    {
+        if (i == num_vertices - 1) j = 0;
+        interpolateVector(vertex_pixels[i], vertex_pixels[j], edge);
+        for (ivec2& pixel : edge)
+        {
+            ivec2& left = left_pixels[pixel.y];
+            ivec2& right = right_pixels[pixel.y];
+            left.x = MIN(left.x, pixel.x);
+            right.x = MAX(right.x, pixel.x);
+        }
+    }
 }
