@@ -121,12 +121,12 @@ void draw()
     if(SDL_MUSTLOCK(screen)) SDL_LockSurface(screen);
 
     //#pragma omp parallel for
-    for(unsigned int i = 0; i < triangles.size(); ++i)
+    vector<vec3> vertices(3);
+    for (Triangle& triangle : triangles)
     {
-        vector<vec3> vertices(3);
-        vertices[0] = triangles[i].v0;
-        vertices[1] = triangles[i].v1;
-        vertices[2] = triangles[i].v2;
+        vertices[0] = triangle.v0;
+        vertices[1] = triangle.v1;
+        vertices[2] = triangle.v2;
 
         drawPolygonEdges(vertices);
     }
