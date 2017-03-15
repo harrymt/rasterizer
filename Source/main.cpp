@@ -105,14 +105,14 @@ void update()
 
 void vertexShader(const glm::vec3& v, glm::ivec2& p)
 {
-	vec3 point = cameraPos - v;
+    vec3 point = cameraPos - v;
 
-	float x = point.x;
-	float y = point.y;
-	float z = point.z;
+    float x = point.x;
+    float y = point.y;
+    float z = point.z;
 
-  p.x = FOCAL_LENGTH * x/z + SCREEN_WIDTH / 2;
-  p.y = FOCAL_LENGTH * y/z + SCREEN_HEIGHT / 2;
+    p.x = FOCAL_LENGTH * x/z + SCREEN_WIDTH / 2;
+    p.y = FOCAL_LENGTH * y/z + SCREEN_HEIGHT / 2;
 }
 
 void draw()
