@@ -1,5 +1,5 @@
-#ifndef RAYTRACER_INCLUDE
-#define RAYTRACER_INCLUDE
+#ifndef RASTERIZER_INCLUDE
+#define RASTERIZER_INCLUDE
 #include <iostream>
 #include <glm/glm.hpp>
 #include <SDL.h>
@@ -59,4 +59,4 @@ void drawPolygonEdges(const vector<vec3>& vertices);
 void drawLineSDL(SDL_Surface* surface, const ivec2& a, const ivec2& b, const vec3& colour);
 void computePolygonRows(const vector<ivec2>& vertex_pixels, vector<ivec2>& left_pixels, vector<ivec2>& right_pixels);
 
-#endif //RAYTRACER_INCLUDE
+#endif //RASTERIZER_INCLUDE
