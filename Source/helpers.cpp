@@ -174,11 +174,11 @@ void drawPolygonEdges(const vector<vec3>& vertices)
     int num_vertices = vertices.size();
     vector<ivec2> projected_vertices(num_vertices);
     vec3 colour(1, 1, 1);
-    
+
     // Loop jamming optimisation applied
     // Data dependency with j-1 and j
     // partial unrolling performed
-    
+
     vertexShader(vertices[0], projected_vertices[0]);
     for (int i = 0, j = 1; i < num_vertices-1; ++i, ++j)
     {
@@ -198,10 +198,10 @@ void computePolygonRows(const vector<ivec2>& vertex_pixels, vector<ivec2>& left_
         max = MAX(max, vertex.y);
     }
     int nrows = max - min + 1;
-    
+
     left_pixels.resize(nrows);
     right_pixels.resize(nrows);
-    
+
     for (int i = 0; i < nrows; ++i)
     {
         left_pixels[i].x = +std::numeric_limits<int>::max();
@@ -220,6 +220,7 @@ void computePolygonRows(const vector<ivec2>& vertex_pixels, vector<ivec2>& left_
             ivec2& right = right_pixels[pixel.y];
             left.x = MIN(left.x, pixel.x);
             right.x = MAX(right.x, pixel.x);
+            right.y = left.y = pixel.y;
         }
     }
 }
