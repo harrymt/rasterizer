@@ -1,4 +1,4 @@
-#include "raytracer.h"
+#include "rasterizer.h"
 #include "float.h"
 
 extern glm::vec3 indirectLight;

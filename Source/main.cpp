@@ -1,4 +1,4 @@
-#include "raytracer.h"
+#include "rasterizer.h"
 #include "omp.h"
 
 #define D2R(x) x*pi/180
