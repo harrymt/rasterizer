@@ -4,6 +4,7 @@
 extern glm::vec3 indirectLight;
 extern glm::vec3 lightPos;
 extern glm::vec3 lightColor;
+extern SDL_Surface* screen;
 
 /**
  * Calculates the direct light from an intersection.
@@ -123,7 +124,7 @@ float interpolate_f(float start, float end, float step, float max)
     return (end - start) * (step / (max - 1)) + start;
 }
 
-void interpolateVector(ivec2 a, ivec2 b, vector<ivec2>& result)
+void interpolateVector(const ivec2& a, const ivec2& b, vector<ivec2>& result)
 {
     int n = result.size();
     vec2 step = vec2(b - a) / float(std::max(n-1, 1));
@@ -155,7 +156,7 @@ vec2 convertTo2D(vec3 coords)
     return vec2(u, v);
 }
 
-void drawLineSDL(SDL_Surface* surface, ivec2 a, ivec2 b, vec3 color)
+void drawLineSDL(SDL_Surface* surface, const ivec2& a, const ivec2& b, const vec3& colour)
 {
     ivec2 delta = glm::abs(a - b);
     int pixels = glm::max(delta.x, delta.y) + 1;
@@ -163,6 +164,23 @@ void drawLineSDL(SDL_Surface* surface, ivec2 a, ivec2 b, vec3 color)
     interpolateVector(a, b, line);
     for (auto& point : line)
     {
-        PutPixelSDL(surface, point.x, point.y, color);
+        PutPixelSDL(surface, point.x, point.y, colour);
     }
+}
+
+void drawPolygonEdges(const vector<vec3>& vertices)
+{
+    int num_vertices = vertices.size();
+    vector<ivec2> projected_vertices(num_vertices);
+    vec3 colour(1, 1, 1);
+    
+    vertexShader(vertices[0], projected_vertices[0]);
+    for (int i = 0, j = 1; i < num_vertices-1; ++i, ++j)
+    {
+        vertexShader(vertices[j], projected_vertices[j]);
+        drawLineSDL(screen, projected_vertices[i], projected_vertices[j], colour);
+    }
+    drawLineSDL(screen, projected_vertices[num_vertices-1], projected_vertices[0], colour);
+    
+    //for (int i = 0; 
 }

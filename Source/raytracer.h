@@ -39,7 +39,7 @@ struct Intersection
 vec3 directLight(const Intersection &i, Triangle closestTriangle, const vector<Triangle>& triangles);
 float interpolate_f(float start, float end, float step, float max);
 void interpolate(float start, float end, vector<float>& result);
-void interpolateVector(ivec2 a, ivec2 b, vector<ivec2>& result);
+void interpolateVector(const ivec2& a, const ivec2& b, vector<ivec2>& result);
 int rand_i(int min, int max);
 float rand_f();
 vec2 convertTo2D(vec3 coords);
@@ -50,6 +50,9 @@ bool triangleIntersection(vec3& point);
 void update();
 void draw();
 
-void drawLineSDL(SDL_Surface* surface, ivec2 a, ivec2 b, vec3 color);
+void vertexShader(const vec3& v, ivec2& p);
+
+void drawPolygonEdges(const vector<vec3>& vertices);
+void drawLineSDL(SDL_Surface* surface, const ivec2& a, const ivec2& b, const vec3& colour);
 
 #endif //RAYTRACER_INCLUDE
