@@ -142,7 +142,7 @@ int main()
     screen = InitializeSDL(SCREEN_WIDTH, SCREEN_HEIGHT);
     t = SDL_GetTicks();
 
-    vector<ivec2> vertexPixels(3);
+    /*vector<ivec2> vertexPixels(3);
     vertexPixels[0] = ivec2(10, 5);
     vertexPixels[1] = ivec2( 5,10);
     vertexPixels[2] = ivec2(15,15);
@@ -157,7 +157,7 @@ int main()
         << "End: ("
         << rightPixels[row].x << ","
         << rightPixels[row].y << "). " << endl;
-    }
+    }*/
 
     // Fill triangles with test model
     LoadTestModel(triangles);

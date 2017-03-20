@@ -39,10 +39,22 @@ struct Intersection
     int triangleIndex;
 };
 
+struct pixel_t
+{
+    int x, y;
+    float zinv;
+
+    friend pixel_t operator+(const pixel_t& a, const pixel_t& b);
+    friend pixel_t operator-(const pixel_t& a, const pixel_t& b);
+    friend pixel_t operator/(const pixel_t& a, const float f);
+    friend pixel_t& operator+=(pixel_t& a, const pixel_t& b);
+};
+
 vec3 directLight(const Intersection &i, Triangle closestTriangle, const vector<Triangle>& triangles);
 float interpolate_f(float start, float end, float step, float max);
 void interpolate(float start, float end, vector<float>& result);
 void interpolateVector(const ivec2& a, const ivec2& b, vector<ivec2>& result);
+void interpolatePixel(const pixel_t& a, const pixel_t& b, vector<pixel_t>& result);
 int rand_i(int min, int max);
 float rand_f();
 vec2 convertTo2D(vec3 coords);

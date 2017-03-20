@@ -128,8 +128,20 @@ float interpolate_f(float start, float end, float step, float max)
 void interpolateVector(const ivec2& a, const ivec2& b, vector<ivec2>& result)
 {
     int n = result.size();
-    vec2 step = vec2(b - a) / float(std::max(n-1, 1));
+    vec2 step = vec2(b - a) / (float) std::max(n-1, 1);
     vec2 current(a);
+    for (int i = 0; i < n; ++i)
+    {
+        result[i] = current;
+        current += step;
+    }
+}
+
+void interpolatePixel(const pixel_t& a, const pixel_t& b, vector<pixel_t>& result)
+{
+    int n = result.size();
+    pixel_t step = pixel_t(b - a) / (float) std::max(n-1, 1);
+    pixel_t current(a);
     for (int i = 0; i < n; ++i)
     {
         result[i] = current;
@@ -252,4 +264,36 @@ void drawPolygon(const vector<vec3>& vertices)
     vector<ivec2> right_pixels;
     computePolygonRows(vertex_pixels, left_pixels, right_pixels);
     drawRows(left_pixels, right_pixels);
+}
+
+pixel_t operator+(const pixel_t& a, const pixel_t& b)
+{
+    pixel_t c;
+    c.x = a.x + b.x;
+    c.y = a.y + b.y;
+    c.zinv = a.zinv + b.zinv;
+    return c;
+}
+pixel_t operator-(const pixel_t& a, const pixel_t& b)
+{
+    pixel_t c;
+    c.x = a.x - b.x;
+    c.y = a.y - b.y;
+    c.zinv = a.zinv - b.zinv;
+    return c;
+}
+pixel_t operator/(const pixel_t& a, const float f)
+{
+    pixel_t c;
+    c.x = a.x / f;
+    c.y = a.y / f;
+    c.zinv = a.zinv / f;
+    return c;
+}
+pixel_t& operator+=(pixel_t& a, const pixel_t& b)
+{
+    a.x += b.x;
+    a.y += b.y;
+    a.zinv += b.zinv;
+    return a;
 }
