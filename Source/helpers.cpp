@@ -206,21 +206,21 @@ void computePolygonRows(const vector<ivec2>& vertex_pixels, vector<ivec2>& left_
     {
         left_pixels[i].x = +std::numeric_limits<int>::max();
         right_pixels[i].x = -std::numeric_limits<int>::max();
+        left_pixels[i].y = right_pixels[i].y = i + min;
     }
 
-    vector<ivec2> edge(nrows);
     int num_vertices = vertex_pixels.size();
     for (int i = 0, j = 1; i < num_vertices; ++i, ++j)
     {
         if (i == num_vertices - 1) j = 0;
+        vector<ivec2> edge(std::abs(vertex_pixels[i].y - vertex_pixels[j].y) + 1);
         interpolateVector(vertex_pixels[i], vertex_pixels[j], edge);
         for (ivec2& pixel : edge)
         {
-            ivec2& left = left_pixels[pixel.y];
-            ivec2& right = right_pixels[pixel.y];
+            ivec2& left = left_pixels[pixel.y-min];
+            ivec2& right = right_pixels[pixel.y-min];
             left.x = MIN(left.x, pixel.x);
             right.x = MAX(right.x, pixel.x);
-            right.y = left.y = pixel.y;
         }
     }
 }

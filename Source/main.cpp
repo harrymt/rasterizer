@@ -160,12 +160,12 @@ int main()
     // Fill triangles with test model
     LoadTestModel(triangles);
 
-    while (NoQuitMessageSDL())
+    /*while (NoQuitMessageSDL())
     {
         update();
         draw();
     }
 
-    SDL_SaveBMP(screen, "screenshot.bmp");
+    SDL_SaveBMP(screen, "screenshot.bmp");*/
     return 0;
 }
