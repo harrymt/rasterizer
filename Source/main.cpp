@@ -11,6 +11,7 @@ const float delta_displacement = 0.1f;
 glm::vec3 indirectLight = 0.5f * glm::vec3(1, 1, 1);
 glm::vec3 lightPos(0, -0.5, -0.7);
 glm::vec3 lightColor = 14.f * glm::vec3(1, 1, 1);
+glm::vec3 currentColour;
 
 const float theta = D2R(5);
 
@@ -124,11 +125,12 @@ void draw()
     vector<vec3> vertices(3);
     for (Triangle& triangle : triangles)
     {
+        currentColour = triangle.color;
         vertices[0] = triangle.v0;
         vertices[1] = triangle.v1;
         vertices[2] = triangle.v2;
 
-        drawPolygonEdges(vertices);
+        drawPolygon/*Edges*/(vertices);
     }
 
     if (SDL_MUSTLOCK(screen)) SDL_UnlockSurface(screen);
@@ -147,7 +149,7 @@ int main()
     vector<ivec2> leftPixels;
     vector<ivec2> rightPixels;
     computePolygonRows( vertexPixels, leftPixels, rightPixels );
-    for( int row=0; row<leftPixels.size(); ++row )
+    for( size_t row=0; row<leftPixels.size(); ++row )
     {
         cout << "Start: ("
         << leftPixels[row].x << ","
@@ -160,12 +162,12 @@ int main()
     // Fill triangles with test model
     LoadTestModel(triangles);
 
-    /*while (NoQuitMessageSDL())
+    while (NoQuitMessageSDL())
     {
         update();
         draw();
     }
 
-    SDL_SaveBMP(screen, "screenshot.bmp");*/
+    SDL_SaveBMP(screen, "screenshot.bmp");
     return 0;
 }

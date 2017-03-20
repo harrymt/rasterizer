@@ -58,5 +58,7 @@ void vertexShader(const vec3& v, ivec2& p);
 void drawPolygonEdges(const vector<vec3>& vertices);
 void drawLineSDL(SDL_Surface* surface, const ivec2& a, const ivec2& b, const vec3& colour);
 void computePolygonRows(const vector<ivec2>& vertex_pixels, vector<ivec2>& left_pixels, vector<ivec2>& right_pixels);
+void drawRows(const vector<ivec2>& left_pixels, const vector<ivec2>& right_pixels);
+void drawPolygon(const vector<vec3>& vertices);
 
 #endif //RASTERIZER_INCLUDE

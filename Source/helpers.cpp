@@ -5,6 +5,7 @@ extern glm::vec3 indirectLight;
 extern glm::vec3 lightPos;
 extern glm::vec3 lightColor;
 extern SDL_Surface* screen;
+extern glm::vec3 currentColour;
 
 /**
  * Calculates the direct light from an intersection.
@@ -197,20 +198,20 @@ void computePolygonRows(const vector<ivec2>& vertex_pixels, vector<ivec2>& left_
         min = MIN(min, vertex.y);
         max = MAX(max, vertex.y);
     }
-    int nrows = max - min + 1;
+    size_t nrows = max - min + 1;
 
     left_pixels.resize(nrows);
     right_pixels.resize(nrows);
 
-    for (int i = 0; i < nrows; ++i)
+    for (size_t i = 0; i < nrows; ++i)
     {
         left_pixels[i].x = +std::numeric_limits<int>::max();
         right_pixels[i].x = -std::numeric_limits<int>::max();
         left_pixels[i].y = right_pixels[i].y = i + min;
     }
 
-    int num_vertices = vertex_pixels.size();
-    for (int i = 0, j = 1; i < num_vertices; ++i, ++j)
+    size_t num_vertices = vertex_pixels.size();
+    for (size_t i = 0, j = 1; i < num_vertices; ++i, ++j)
     {
         if (i == num_vertices - 1) j = 0;
         vector<ivec2> edge(std::abs(vertex_pixels[i].y - vertex_pixels[j].y) + 1);
@@ -223,4 +224,32 @@ void computePolygonRows(const vector<ivec2>& vertex_pixels, vector<ivec2>& left_
             right.x = MAX(right.x, pixel.x);
         }
     }
+}
+
+void drawRows(const vector<ivec2>& left_pixels, const vector<ivec2>& right_pixels)
+{
+    for (size_t i = 0; i < left_pixels.size(); ++i)
+    {
+        const ivec2& left = left_pixels[i];
+        const ivec2& right = right_pixels[i];
+        for (int j = left.x; j <= right.x; ++j)
+        {
+            PutPixelSDL(screen, j, left.y, currentColour);
+        }
+    }
+}
+
+void drawPolygon(const vector<vec3>& vertices)
+{
+    int num_vertices = vertices.size();
+    vector<ivec2> vertex_pixels(num_vertices);
+    for (int i = 0; i < num_vertices; ++i)
+    {
+        vertexShader(vertices[i], vertex_pixels[i]);
+    }
+
+    vector<ivec2> left_pixels;
+    vector<ivec2> right_pixels;
+    computePolygonRows(vertex_pixels, left_pixels, right_pixels);
+    drawRows(left_pixels, right_pixels);
 }
