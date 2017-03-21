@@ -6,7 +6,7 @@
 SDL_Surface* screen;
 int t;
 vector<Triangle> triangles;
-vec3 cameraPos(0, 0, -FOCAL);
+glm::vec3 cameraPos(0, 0, -FOCAL);
 const float delta_displacement = 0.1f;
 glm::vec3 indirectLight = 0.5f * glm::vec3(1, 1, 1);
 glm::vec3 lightPos(0, -0.5, -0.7);
@@ -15,15 +15,17 @@ glm::vec3 currentColour;
 
 const float theta = D2R(5);
 
-const mat3 rota(cos(theta),  0, sin(theta),
-                0,           1, 0,
-                -sin(theta), 0, cos(theta));
+const glm::mat3 rota(cos(theta),  0, sin(theta),
+                     0,           1, 0,
+                     -sin(theta), 0, cos(theta));
 
-const mat3 rotc(cos(-theta),  0, sin(-theta),
-                0,            1, 0,
-                -sin(-theta), 0, cos(-theta));
+const glm::mat3 rotc(cos(-theta),  0, sin(-theta),
+                     0,            1, 0,
+                     -sin(-theta), 0, cos(-theta));
 
-mat3 currentRot(1, 0, 0, 0, 1, 0, 0, 0, 1);
+glm::mat3 currentRot(1, 0, 0, 0, 1, 0, 0, 0, 1);
+
+float depth_buffer[SCREEN_HEIGHT][SCREEN_WIDTH];
 
 void update()
 {
@@ -72,7 +74,7 @@ void update()
     {
         cameraPos = {0, 0, -FOCAL};
         lightPos = {0, -0.5, -0.7};
-        currentRot = mat3(1, 0, 0, 0, 1, 0, 0, 0, 1);
+        currentRot = glm::mat3(1, 0, 0, 0, 1, 0, 0, 0, 1);
     }
 
 
@@ -104,16 +106,17 @@ void update()
     }
 }
 
-void vertexShader(const glm::vec3& v, glm::ivec2& p)
+void vertexShader(const vertex_t& v, pixel_t& p)
 {
-    vec3 point = (v - cameraPos) * currentRot;
+    glm::vec3 point = (v.position - cameraPos) * currentRot;
 
     float x = point.x;
     float y = point.y;
     float z = point.z;
 
-    p.x = FOCAL_LENGTH * x/z + SCREEN_WIDTH / 2;
-    p.y = FOCAL_LENGTH * y/z + SCREEN_HEIGHT / 2;
+    p.zinv = 1/z;
+    p.x = (int) (FOCAL_LENGTH * x/z) + SCREEN_WIDTH / 2;
+    p.y = (int) (FOCAL_LENGTH * y/z) + SCREEN_HEIGHT / 2;
 }
 
 void draw()
@@ -122,13 +125,22 @@ void draw()
     if(SDL_MUSTLOCK(screen)) SDL_LockSurface(screen);
 
     //#pragma omp parallel for
-    vector<vec3> vertices(3);
+    for (int i = 0; i < SCREEN_HEIGHT; ++i)
+    {
+        for (int j = 0; j < SCREEN_WIDTH; ++j)
+        {
+            depth_buffer[i][j] = 0;
+        }
+    }
+
+    //#pragma omp parallel for
+    vector<vertex_t> vertices(3);
     for (Triangle& triangle : triangles)
     {
         currentColour = triangle.color;
-        vertices[0] = triangle.v0;
-        vertices[1] = triangle.v1;
-        vertices[2] = triangle.v2;
+        vertices[0].position = triangle.v0;
+        vertices[1].position = triangle.v1;
+        vertices[2].position = triangle.v2;
 
         drawPolygon/*Edges*/(vertices);
     }
