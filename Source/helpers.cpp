@@ -7,112 +7,9 @@ extern glm::vec3 lightColor;
 extern SDL_Surface* screen;
 extern glm::vec3 currentColour;
 
-/**
- * Calculates the direct light from an intersection.
- */
-vec3 directLight(const Intersection &i, Triangle closestTriangle, const vector<Triangle>& triangles) {
-    vec3 directionFromSurfaceToLight = glm::normalize(lightPos - i.position); // r hat
-    float distFromLightPosandIntersectionPos = glm::distance(i.position, lightPos); // r
-    vec3 normalOfSurface = glm::normalize(closestTriangle.normal); // n hat
-
-    Intersection intersectFromThis;
-
-    glm::vec3 colour = lightColor;
-
-    // Check intersection from intersection to lightsource
-    if(closestIntersection(i.position, directionFromSurfaceToLight, triangles, intersectFromThis))
-    {
-        // If in shadow, darken the colour
-        if(intersectFromThis.triangleIndex != i.triangleIndex && intersectFromThis.distance < glm::length(directionFromSurfaceToLight))
-        {
-            colour -= vec3(10.5f, 10.5f, 10.5f);
-        }
-    }
-
-    // (25)
-    float area = 4 * pi * (distFromLightPosandIntersectionPos * distFromLightPosandIntersectionPos);
-
-    vec3 powerPerArea = colour / area; // P / A0
-
-    // (27)
-    vec3 directIllumination = powerPerArea * glm::max(glm::dot(directionFromSurfaceToLight, normalOfSurface), 0.0f); // D
-
-    return directIllumination;
-}
-
-
-/*
- * Checks for intersection against all triangles, if found returns true, else false.
- * If intersection found, then return info about the closest intersection.
- */
-bool closestIntersection(vec3 start, vec3 dir, const vector<Triangle>& triangles, Intersection& closest)
-{
-    float minimumDistance = std::numeric_limits<float>::max();
-
-    bool found = false;
-    for (size_t i = 0; i < triangles.size(); ++i)
-    {
-        const vec3& v0 = triangles[i].v0;
-        const vec3& v1 = triangles[i].v1;
-        const vec3& v2 = triangles[i].v2;
-        vec3 edge1 = v1 - v0;
-        vec3 edge2 = v2 - v0;
-        vec3 b = start - v0;
-        mat3 A(-dir, edge1, edge2);
-
-        // Instead of using matrix inverse we can use Cramer's rule
-        // Namely, instead of x = A^-1*b
-        // We have x_i = |A_i|/|A|
-        // With A_i as the replacement of column i in A with b
-        float detA = glm::determinant(A);
-        mat3 A_i = A;
-        A_i[0] = b;
-        float t = glm::determinant(A_i)/detA;
-        if (t < 0.0f) continue; // inequality 7
-        A_i[0] = A[0];
-        A_i[1] = b;
-        float u = glm::determinant(A_i)/detA;
-        if (u < 0.0f) continue; // inequality 8
-        A_i[1] = A[1];
-        A_i[2] = b;
-        float v = glm::determinant(A_i)/detA;
-        if (v < 0.0f || (u + v) > 1.0f) continue; // inequalities 9 & 11
-
-        if(t < FLT_EPSILON) continue;
-
-        // Check inequalities (7), (8), (9) and (11)
-        vec3 point = v0 + (edge1 * u) + (edge2 * v);
-        float r = glm::distance(start, point);
-        if(r < minimumDistance)
-        {
-            minimumDistance = r;
-            closest.triangleIndex = i;
-            closest.position = point;
-            closest.distance = r;
-            found = true;
-        }
-    }
-    return found;
-}
-
-void getRayDirection(int x, int y, vec3 &rayDir)
-{
-    rayDir.x = x - (SCREEN_WIDTH / 2);
-    rayDir.y = y - (SCREEN_HEIGHT / 2);
-    rayDir.z = FOCAL_LENGTH;
-}
-
 void printVector(const char* name, vec3 v)
 {
     cout << name << ": " << v.x << "," << v.y << "," << v.z << endl;
-}
-
-bool triangleIntersection(vec3& point)
-{
-    float t = point.x;
-    float u = point.y;
-    float v = point.z;
-    return (t >= 0 && u >= 0 && v >= 0 && (u + v) <= 1);
 }
 
 float rand_f(float min, float max)
@@ -140,11 +37,11 @@ void interpolateVector(const ivec2& a, const ivec2& b, vector<ivec2>& result)
 void interpolatePixel(const pixel_t& a, const pixel_t& b, vector<pixel_t>& result)
 {
     int n = result.size();
-    pixel_t step = pixel_t(b - a) / (float) std::max(n-1, 1);
-    pixel_t current(a);
+    fpixel_t step = fpixel_t(b - a) / (float) std::max(n-1, 1);
+    fpixel_t current(a);
     for (int i = 0; i < n; ++i)
     {
-        result[i] = current;
+        result[i] = pixel_t(current);
         current += step;
     }
 }
@@ -266,31 +163,45 @@ void drawPolygon(const vector<vec3>& vertices)
     drawRows(left_pixels, right_pixels);
 }
 
-pixel_t operator+(const pixel_t& a, const pixel_t& b)
+pixel_t::pixel_t(int x, int y, float zinv)
 {
-    pixel_t c;
-    c.x = a.x + b.x;
-    c.y = a.y + b.y;
-    c.zinv = a.zinv + b.zinv;
-    return c;
+    this->x = x;
+    this->y = y;
+    this->zinv = zinv;
 }
+
+pixel_t::pixel_t(const fpixel_t& p)
+{
+    this->x = (int) p.x;
+    this->y = (int) p.y;
+    this->zinv = p.zinv;
+}
+
+fpixel_t::fpixel_t(float x, float y, float zinv)
+{
+    this->x = x;
+    this->y = y;
+    this->zinv = zinv;
+}
+
+fpixel_t::fpixel_t(const pixel_t& p)
+{
+    this->x = (float) p.x;
+    this->y = (float) p.y;
+    this->zinv = p.zinv;
+}
+
 pixel_t operator-(const pixel_t& a, const pixel_t& b)
 {
-    pixel_t c;
-    c.x = a.x - b.x;
-    c.y = a.y - b.y;
-    c.zinv = a.zinv - b.zinv;
-    return c;
+    return pixel_t(a.x - b.x, a.y - b.y, a.zinv - b.zinv);
 }
-pixel_t operator/(const pixel_t& a, const float f)
+
+fpixel_t operator/(const fpixel_t& a, const float f)
 {
-    pixel_t c;
-    c.x = a.x / f;
-    c.y = a.y / f;
-    c.zinv = a.zinv / f;
-    return c;
+    return fpixel_t(a.x / f, a.y / f, a.zinv / f);
 }
-pixel_t& operator+=(pixel_t& a, const pixel_t& b)
+
+fpixel_t& operator+=(fpixel_t& a, const fpixel_t& b)
 {
     a.x += b.x;
     a.y += b.y;

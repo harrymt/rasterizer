@@ -106,7 +106,7 @@ void update()
 
 void vertexShader(const glm::vec3& v, glm::ivec2& p)
 {
-    vec3 point = cameraPos - v;
+    vec3 point = (v - cameraPos) * currentRot;
 
     float x = point.x;
     float y = point.y;

@@ -32,25 +32,36 @@ using std::cout;
 using std::vector;
 using std::endl;
 
-struct Intersection
-{
-    vec3 position;
-    float distance;
-    int triangleIndex;
-};
+struct pixel_t;
+struct fpixel_t;
+struct vertex_t;
 
 struct pixel_t
 {
     int x, y;
     float zinv;
 
-    friend pixel_t operator+(const pixel_t& a, const pixel_t& b);
+    pixel_t(int x, int y, float zinv);
+    pixel_t(const fpixel_t& p);
     friend pixel_t operator-(const pixel_t& a, const pixel_t& b);
-    friend pixel_t operator/(const pixel_t& a, const float f);
-    friend pixel_t& operator+=(pixel_t& a, const pixel_t& b);
 };
 
-vec3 directLight(const Intersection &i, Triangle closestTriangle, const vector<Triangle>& triangles);
+struct fpixel_t
+{
+    float x, y;
+    float zinv;
+
+    fpixel_t(float x, float y, float zinv);
+    fpixel_t(const pixel_t& p);
+    friend fpixel_t operator/(const fpixel_t& a, const float f);
+    friend fpixel_t& operator+=(fpixel_t& a, const fpixel_t& b);
+};
+
+struct vertex_t
+{
+    vec3 position;
+};
+
 float interpolate_f(float start, float end, float step, float max);
 void interpolate(float start, float end, vector<float>& result);
 void interpolateVector(const ivec2& a, const ivec2& b, vector<ivec2>& result);
@@ -58,8 +69,6 @@ void interpolatePixel(const pixel_t& a, const pixel_t& b, vector<pixel_t>& resul
 int rand_i(int min, int max);
 float rand_f();
 vec2 convertTo2D(vec3 coords);
-bool closestIntersection(vec3 start, vec3 dir, const vector<Triangle>& triangles, Intersection& closest);
-void getRayDirection(int x, int y, vec3 &rayDir);
 void printVector(const char* name, vec3 v);
 bool triangleIntersection(vec3& point);
 void update();
