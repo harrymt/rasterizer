@@ -1,12 +1,7 @@
 #include "rasterizer.h"
 #include "float.h"
 
-extern glm::vec3 indirectLight;
-extern glm::vec3 lightPos;
-extern glm::vec3 lightColor;
 extern SDL_Surface* screen;
-extern glm::vec3 currentColour;
-extern float depth_buffer[SCREEN_HEIGHT][SCREEN_WIDTH];
 
 void printVector(const char* name, glm::vec3 v)
 {
@@ -138,13 +133,11 @@ void computePolygonRows(const vector<pixel_t>& vertex_pixels, vector<pixel_t>& l
         {
             pixel_t& left = left_pixels[pixel.y-min];
             pixel_t& right = right_pixels[pixel.y-min];
-            //left.x = MIN(left.x, pixel.x);
             if (pixel.x < left.x)
             {
                 left.x = pixel.x;
                 left.zinv = pixel.zinv;
             }
-            //right.x = MAX(right.x, pixel.x);
             if (pixel.x > right.x)
             {
                 right.x = pixel.x;
@@ -168,11 +161,7 @@ void drawRows(const vector<pixel_t>& left_pixels, const vector<pixel_t>& right_p
         {
             if (left.y >= SCREEN_HEIGHT || j >= SCREEN_WIDTH
              || left.y < 0 || j < 0) continue;
-            if (zinv > depth_buffer[left.y][j])
-            {
-                depth_buffer[left.y][j] = zinv;
-                PutPixelSDL(screen, j, left.y, currentColour);
-            }
+            pixelShader(pixel_t(j, left.y, zinv));
         }
     }
 }
@@ -190,50 +179,4 @@ void drawPolygon(const vector<vertex_t>& vertices)
     vector<pixel_t> right_pixels;
     computePolygonRows(vertex_pixels, left_pixels, right_pixels);
     drawRows(left_pixels, right_pixels);
-}
-
-pixel_t::pixel_t(int x, int y, float zinv)
-{
-    this->x = x;
-    this->y = y;
-    this->zinv = zinv;
-}
-
-pixel_t::pixel_t(const fpixel_t& p)
-{
-    this->x = (int) p.x;
-    this->y = (int) p.y;
-    this->zinv = p.zinv;
-}
-
-fpixel_t::fpixel_t(float x, float y, float zinv)
-{
-    this->x = x;
-    this->y = y;
-    this->zinv = zinv;
-}
-
-fpixel_t::fpixel_t(const pixel_t& p)
-{
-    this->x = (float) p.x;
-    this->y = (float) p.y;
-    this->zinv = p.zinv;
-}
-
-pixel_t operator-(const pixel_t& a, const pixel_t& b)
-{
-    return pixel_t(a.x - b.x, a.y - b.y, a.zinv - b.zinv);
-}
-
-fpixel_t operator/(const fpixel_t& a, const float f)
-{
-    return fpixel_t(a.x / f, a.y / f, a.zinv / f);
-}
-
-fpixel_t& operator+=(fpixel_t& a, const fpixel_t& b)
-{
-    a.x += b.x;
-    a.y += b.y;
-    a.zinv += b.zinv;
-    return a;
 }

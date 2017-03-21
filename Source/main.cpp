@@ -8,10 +8,12 @@ int t;
 vector<Triangle> triangles;
 glm::vec3 cameraPos(0, 0, -FOCAL);
 const float delta_displacement = 0.1f;
-glm::vec3 indirectLight = 0.5f * glm::vec3(1, 1, 1);
 glm::vec3 lightPos(0, -0.5, -0.7);
-glm::vec3 lightColor = 14.f * glm::vec3(1, 1, 1);
+glm::vec3 lightPower = 1.1f * glm::vec3(1, 1, 1);
+glm::vec3 indirectLightPowerPerArea = 0.5f * glm::vec3(1, 1, 1);
 glm::vec3 currentColour;
+glm::vec3 currentNormal;
+glm::vec3 currentReflectance;
 
 const float theta = D2R(5);
 
@@ -117,6 +119,15 @@ void vertexShader(const vertex_t& v, pixel_t& p)
     p.zinv = 1/z;
     p.x = (int) (FOCAL_LENGTH * x/z) + SCREEN_WIDTH / 2;
     p.y = (int) (FOCAL_LENGTH * y/z) + SCREEN_HEIGHT / 2;
+}
+
+void pixelShader(const pixel_t& p)
+{
+    if (p.zinv > depth_buffer[p.y][p.x])
+    {
+        depth_buffer[p.y][p.x] = p.zinv;
+        PutPixelSDL(screen, p.x, p.y, currentColour);
+    }
 }
 
 void draw()

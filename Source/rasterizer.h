@@ -35,6 +35,7 @@ struct pixel_t
 {
     int x, y;
     float zinv;
+    glm::vec3 pos3d;
 
     inline pixel_t() {}
     pixel_t(int x, int y, float zinv);
@@ -46,6 +47,7 @@ struct fpixel_t
 {
     float x, y;
     float zinv;
+    glm::vec3 pos3d;
 
     fpixel_t(float x, float y, float zinv);
     fpixel_t(const pixel_t& p);
@@ -70,6 +72,7 @@ void update();
 void draw();
 
 void vertexShader(const vertex_t& v, pixel_t& p);
+void pixelShader(const pixel_t& p);
 
 void drawPolygonEdges(const vector<vertex_t>& vertices);
 void drawLineSDL(SDL_Surface* surface, const pixel_t& a, const pixel_t& b, const colour_t& colour);

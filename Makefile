@@ -5,7 +5,7 @@ B_DIR=Build
 GLMDIR=glm
 
 # Name of source file
-OBJECTS = $(B_DIR)/main.o $(B_DIR)/helpers.o
+OBJECTS = $(B_DIR)/main.o $(B_DIR)/helpers.o $(B_DIR)/pixel.o
 
 ########
 #   Output
