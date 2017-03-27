@@ -9,9 +9,8 @@ vector<Triangle> triangles;
 glm::vec3 cameraPos(0, 0, -FOCAL);
 const float delta_displacement = 0.1f;
 glm::vec3 lightPos(0, -0.5, -0.7);
-glm::vec3 lightPower = 1.1f * glm::vec3(1, 1, 1);
-glm::vec3 indirectLightPowerPerArea = 0.5f * glm::vec3(1, 1, 1);
-glm::vec3 currentColour;
+glm::vec3 lightPower = 1.1f * glm::vec3(1, 1, 1); // P
+glm::vec3 indirectLightPowerPerArea = 0.5f * glm::vec3(1, 1, 1); // D
 glm::vec3 currentNormal;
 glm::vec3 currentReflectance;
 
@@ -126,7 +125,16 @@ void pixelShader(const pixel_t& p)
     if (p.zinv > depth_buffer[p.y][p.x])
     {
         depth_buffer[p.y][p.x] = p.zinv;
-        PutPixelSDL(screen, p.x, p.y, currentColour);
+
+        glm::vec3 surfaceToLight = lightPos - p.pos3d;
+        float r = glm::length(surfaceToLight);
+        surfaceToLight = glm::normalize(surfaceToLight);
+
+        float area = 4 * pi * r * r; // Bottom part of equation
+        glm::vec3 D = lightPower * glm::max(glm::dot(surfaceToLight, currentNormal), 0.0f) / area;
+        glm::vec3 illumination = currentReflectance * (D + indirectLightPowerPerArea);
+
+        PutPixelSDL(screen, p.x, p.y, illumination);
     }
 }
 
@@ -135,7 +143,6 @@ void draw()
     SDL_FillRect(screen, 0, 0);
     if(SDL_MUSTLOCK(screen)) SDL_LockSurface(screen);
 
-    //#pragma omp parallel for
     for (int i = 0; i < SCREEN_HEIGHT; ++i)
     {
         for (int j = 0; j < SCREEN_WIDTH; ++j)
@@ -144,11 +151,13 @@ void draw()
         }
     }
 
-    //#pragma omp parallel for
     vector<vertex_t> vertices(3);
+
+    // #pragma omp parallel for
     for (Triangle& triangle : triangles)
     {
-        currentColour = triangle.color;
+        currentReflectance = triangle.color;
+        currentNormal = triangle.normal;
         vertices[0].position = triangle.v0;
         vertices[1].position = triangle.v1;
         vertices[2].position = triangle.v2;
