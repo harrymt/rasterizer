@@ -2,7 +2,7 @@
 
 #ifndef SDL_AUXILIARY_H
 #define SDL_AUXILIARY_H
-
+#undef main
 #include "SDL.h"
 #include <iostream>
 #include <glm/glm.hpp>
