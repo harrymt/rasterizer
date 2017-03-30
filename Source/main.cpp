@@ -169,17 +169,18 @@ void draw()
     SDL_UpdateRect(screen, 0, 0, 0, 0);
 }
 
+
 int main()
 {
     screen = InitializeSDL(SCREEN_WIDTH, SCREEN_HEIGHT);
     t = SDL_GetTicks();
 
-    /*vector<ivec2> vertexPixels(3);
-    vertexPixels[0] = ivec2(10, 5);
-    vertexPixels[1] = ivec2( 5,10);
-    vertexPixels[2] = ivec2(15,15);
-    vector<ivec2> leftPixels;
-    vector<ivec2> rightPixels;
+   /* vector<glm::ivec2> vertexPixels(3);
+    vertexPixels[0] = glm::ivec2(10, 5);
+    vertexPixels[1] = glm::ivec2( 5,10);
+    vertexPixels[2] = glm::ivec2(15,15);
+    vector<glm::ivec2> leftPixels;
+    vector<glm::ivec2> rightPixels;
     computePolygonRows( vertexPixels, leftPixels, rightPixels );
     for( size_t row=0; row<leftPixels.size(); ++row )
     {

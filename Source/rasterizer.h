@@ -11,15 +11,16 @@
 #include "SDLauxiliary.h"
 #include "TestModel.h"
 
+
 #define FOCAL 2.0f
-#define SCREEN_WIDTH 750
-#define SCREEN_HEIGHT 750
+#define SCREEN_WIDTH 500
+#define SCREEN_HEIGHT 500
 #define FOCAL_LENGTH SCREEN_HEIGHT / FOCAL
 
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 
-constexpr float pi = atan(1.0);
+const float pi = (float) atan(1.0);
 
 using std::cout;
 using std::vector;

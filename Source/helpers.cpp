@@ -21,7 +21,7 @@ float interpolate_f(float start, float end, float step, float max)
 void interpolateVector(const glm::ivec2& a, const glm::ivec2& b, vector<glm::ivec2>& result)
 {
     int n = result.size();
-    glm::vec2 step = glm::vec2(b - a) / (float) std::max(n-1, 1);
+    glm::vec2 step = glm::vec2(b - a) / (float) std::fmax(n-1, 1);
     glm::vec2 current(a);
     for (int i = 0; i < n; ++i)
     {
@@ -33,7 +33,7 @@ void interpolateVector(const glm::ivec2& a, const glm::ivec2& b, vector<glm::ive
 void interpolatePixel(const pixel_t& a, const pixel_t& b, vector<pixel_t>& result)
 {
     int n = result.size();
-    fpixel_t step = fpixel_t(b - a) / (float) std::max(n-1, 1);
+    fpixel_t step = fpixel_t(b - a) / (float) std::fmax(n-1, 1);
     fpixel_t current(a);
     for (int i = 0; i < n; ++i)
     {

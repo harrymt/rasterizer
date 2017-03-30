@@ -29,3 +29,25 @@ Build/
 *.exe
 *.out
 *.app
+
+# Visual Studio
+Source/glm
+.vs/
+Source/.vs/
+Source/Debug/
+Source/rasterizer.aps
+Source/rasterizer.rc
+Source/rasterizer.sln
+Source/rasterizer.vcxproj
+Source/rasterizer.vcxproj.*
+*.vcxproj.*
+Source/rasterizer.VC.*
+Source/x64/*
+rasterizer.sln
+rasterizer.VC.db
+rasterizer.vcxproj
+rasterizer.VC.db
+rasterizer.vcxproj
+Source/raterizer.sln
+Source/raterizer.VC.db
+Source/raterizer.vcxproj
