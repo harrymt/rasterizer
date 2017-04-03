@@ -25,15 +25,17 @@ Note: SDL should be installed on the machine.
 - Take SDL.dll and place it into your project Source folder also (we are gonna move it in a sec)
 - Okay now we are ready to open VS (File -> New -> Create new project from Source -> Console app -> Select directory where you have cloned this repo)
 - When its loaded, rightclick project name (not solution) and select properties
-- In Properties change these 3 sections (I have chosen for DEBUG: x64)
+
+
+In Properties change these 3 sections (I have chosen for DEBUG: x64)
 
 1. VC++ Directories
-  - Include Directories, add `c:\vs_lib\include`
-  - Library Directories, add `c:\vs_lib\lib`
+    - Include Directories, add `c:\vs_lib\include`
+    - Library Directories, add `c:\vs_lib\lib`
 2. C/C++
-  - Additional Include Directories, add the location of your GLM folder, e.g. `C:\Users\harrymt\Documents\GitHub\ray_tracer\Source\glm`
+    - Additional Include Directories, add the location of your GLM folder, e.g. `C:\Users\harrymt\Documents\GitHub\ray_tracer\Source\glm`
 3. Linked
-  - Input, `SDL.lib;SDLmain.lib;`
+    - Input, `SDL.lib;SDLmain.lib;`
 
 
 - Based on this tutorial: (google lazyfoo SDL 1.2)
