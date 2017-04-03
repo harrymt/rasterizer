@@ -2,6 +2,31 @@
 
 Rasterizer for the University of Bristol Computer Graphics course (course work 2).
 
+# Extensions
+
+## TODO
+  - Bringing in other models
+
+### Ray tracer
+    - Photon mapping / Caustics
+
+### Rasterizer
+    - Finish Global Illumination
+    - Parrellisation, different sort
+    - Shadows
+    - Anti aliasing
+
+## DONE
+
+### Ray tracer
+    - Parrellisation
+    - Soft shadows
+    - Anti Aliasing
+
+### Rasterizer
+    - Finish Global illumination
+    
+  
 ## How to Build
 
 Simply use the [Makefile](Makefile) to build the program by running the following command in the directory.
