@@ -51,3 +51,5 @@ rasterizer.vcxproj
 Source/raterizer.sln
 Source/raterizer.VC.db
 Source/raterizer.vcxproj
+
+*.opendb

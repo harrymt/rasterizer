@@ -120,6 +120,13 @@ void vertexShader(const vertex_t& v, pixel_t& p)
     p.y = (int) (FOCAL_LENGTH * y/z) + SCREEN_HEIGHT / 2;
 }
 
+const glm::vec3 fastNormalize(const glm::vec3 &v)
+{
+	const float len_sq = v.x * v.x + v.y * v.y + v.z * v.z;
+	const float len_inv = sqrt(len_sq);
+	return glm::vec3(v.x * len_inv, v.y * len_inv, v.z * len_inv);
+}
+
 void pixelShader(const pixel_t& p)
 {
     if (p.zinv > depth_buffer[p.y][p.x])
@@ -128,7 +135,7 @@ void pixelShader(const pixel_t& p)
 
         glm::vec3 surfaceToLight = lightPos - p.pos3d;
         float r = glm::length(surfaceToLight);
-        surfaceToLight = glm::normalize(surfaceToLight);
+		surfaceToLight = fastNormalize(surfaceToLight);
 
         float area = 4 * pi * r * r; // Bottom part of equation
         glm::vec3 D = lightPower * glm::max(glm::dot(surfaceToLight, currentNormal), 0.0f) / area;
