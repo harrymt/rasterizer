@@ -11,10 +11,11 @@ Rasterizer for the University of Bristol Computer Graphics course (course work 2
     - Photon mapping / Caustics
 
 ### Rasterizer
+http://www.cs.cmu.edu/afs/cs/academic/class/15869-f11/www/ <- Great resource
     - Finish Global Illumination
     - Parrellisation, different sort
     - Shadows
-    - Anti aliasing
+    - Anti aliasing -(FXAA or MLAA)
 
 ## DONE
 
@@ -25,8 +26,8 @@ Rasterizer for the University of Bristol Computer Graphics course (course work 2
 
 ### Rasterizer
     - Finish Global illumination
-    
-  
+
+
 ## How to Build
 
 Simply use the [Makefile](Makefile) to build the program by running the following command in the directory.
