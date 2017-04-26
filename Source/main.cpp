@@ -190,23 +190,6 @@ int main()
     screen = InitializeSDL(SCREEN_WIDTH, SCREEN_HEIGHT);
     t = SDL_GetTicks();
 
-   /* vector<glm::ivec2> vertexPixels(3);
-    vertexPixels[0] = glm::ivec2(10, 5);
-    vertexPixels[1] = glm::ivec2( 5,10);
-    vertexPixels[2] = glm::ivec2(15,15);
-    vector<glm::ivec2> leftPixels;
-    vector<glm::ivec2> rightPixels;
-    computePolygonRows( vertexPixels, leftPixels, rightPixels );
-    for( size_t row=0; row<leftPixels.size(); ++row )
-    {
-        cout << "Start: ("
-        << leftPixels[row].x << ","
-        << leftPixels[row].y << "). "
-        << "End: ("
-        << rightPixels[row].x << ","
-        << rightPixels[row].y << "). " << endl;
-    }*/
-
     // Fill triangles with test model
     LoadTestModel(triangles);
 
