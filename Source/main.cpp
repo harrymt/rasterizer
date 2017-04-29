@@ -9,8 +9,8 @@ vector<Triangle> triangles;
 glm::vec3 cameraPos(0, 0, -FOCAL);
 const float delta_displacement = 0.1f;
 
-glm::vec3 lightPos(0, -0.5, -0.7);
-glm::vec3 lightPower = 2.0f * glm::vec3(1, 1, 1); // P
+glm::vec3 lightPos(0, 0, 0);
+glm::vec3 lightPower = 16.0f * glm::vec3(1, 1, 1); // P
 glm::vec3 indirectLightPowerPerArea = 0.5f * glm::vec3(1, 1, 1); // D
 glm::vec3 currentNormal;
 glm::vec3 currentColor;
@@ -29,6 +29,7 @@ const glm::mat3 rotc(cos(-theta),  0, sin(-theta),
 glm::mat3 currentRot(1, 0, 0, 0, 1, 0, 0, 0, 1);
 
 float depth_buffer[SCREEN_HEIGHT][SCREEN_WIDTH];
+
 
 void update()
 {
@@ -76,7 +77,7 @@ void update()
     if (keystate[SDLK_r])
     {
         cameraPos = {0, 0, -FOCAL};
-        lightPos = {0, -0.5, -0.7};
+        lightPos = {0, 0, 0};
         currentRot = glm::mat3(1, 0, 0, 0, 1, 0, 0, 0, 1);
     }
 
@@ -117,6 +118,7 @@ void vertexShader(const vertex_t& v, pixel_t& p)
     float y = point.y;
     float z = point.z;
 
+    p.pos3d = v.position;
     p.zinv = 1/z;
     p.x = (int) (FOCAL_LENGTH * x/z) + SCREEN_WIDTH / 2;
     p.y = (int) (FOCAL_LENGTH * y/z) + SCREEN_HEIGHT / 2;
@@ -129,25 +131,32 @@ const glm::vec3 fastNormalize(const glm::vec3 &v)
 	return glm::vec3(v.x * len_inv, v.y * len_inv, v.z * len_inv);
 }
 
+/**
+* The nearer the pixel.pos3d is to the lightPos, the brighter it should be.
+*/
 void pixelShader(const pixel_t& p)
 {
-	// Don't calculate the shader if pixel is off screen
-	if (p.x < SCREEN_WIDTH && p.x >= 0 &&
-		p.y < SCREEN_HEIGHT && p.y >= 0 &&
-		p.zinv > depth_buffer[p.y][p.x])
+	if (p.zinv > depth_buffer[p.y][p.x])
 	{
+ 
 		depth_buffer[p.y][p.x] = p.zinv;
 
 		// Calculate illumination
-		glm::vec3 surfaceToLight = lightPos - p.pos3d;
+		glm::vec3 surfaceToLight = lightPos - p.zinv;
 		float r = glm::length(surfaceToLight);
+        //cout << "pos3d " << p.pos3d.x << ", " << p.pos3d.y << endl;
+        //cout << "r: " << r << endl;
 		float area = 4 * pi * r * r; // Bottom part of equation
 		float ratio = glm::dot(currentNormal, glm::normalize(surfaceToLight));
-		if (ratio < 0) { ratio = 0; }
+        if (ratio < 0) { ratio = 0.0001; }
 		glm::vec3 b = lightPower / area;
 		glm::vec3 d = b * ratio;
-		glm::vec3 illumination = d + indirectLightPowerPerArea; //  (lightPower * glm::max(d, 0.0f)) * currentReflectance + indirectLightPowerPerArea;
 
+        float strength = 2.0f;
+        float illumination = glm::clamp(1.0f - (r / strength), 0.0f, 1.0f);//  d + indirectLightPowerPerArea * currentReflectance; //  (lightPower * glm::max(d, 0.0f)) * currentReflectance + indirectLightPowerPerArea;
+
+        //cout << "p (" << p.x << ", " << p.y << ", " << p.zinv << ")" << endl;
+        //cout << "Illumination brig (" << illumination.r << ", " << illumination.g << ", " << illumination.b << ")" << endl;
 		PutPixelSDL(screen, p.x, p.y, illumination * currentColor);
 	}
 }
@@ -164,6 +173,19 @@ void draw()
             depth_buffer[i][j] = 0;
         }
     }
+    
+   
+    // Draw light
+    float size = 0.8f;
+    vector<vertex_t> light(3);
+    currentNormal = glm::vec3(0.1f, 0.1f, 0.1f);
+    currentColor = glm::vec3(0.9f, 1.0f, 1.0f);;
+    currentReflectance = glm::vec3(0.9f, 0.5f, 0.5f);
+    light[0].position = lightPos - glm::vec3(size, size, size);
+    light[1].position = lightPos - glm::vec3(0, 0, size);
+    light[2].position = lightPos - glm::vec3(size, 0, size);
+    drawPolygon(light);
+
 
     vector<vertex_t> vertices(3);
 
@@ -177,7 +199,7 @@ void draw()
         vertices[1].position = triangle.v1;
         vertices[2].position = triangle.v2;
 
-        drawPolygon/*Edges*/(vertices);
+        drawPolygon(vertices);
     }
 
     if (SDL_MUSTLOCK(screen)) SDL_UnlockSurface(screen);
@@ -192,6 +214,7 @@ int main()
 
     // Fill triangles with test model
     LoadTestModel(triangles);
+    
 
     while (NoQuitMessageSDL())
     {

@@ -13,8 +13,8 @@
 
 
 #define FOCAL 2.0f
-#define SCREEN_WIDTH 500
-#define SCREEN_HEIGHT 500
+#define SCREEN_WIDTH 1000
+#define SCREEN_HEIGHT 1000
 #define FOCAL_LENGTH SCREEN_HEIGHT / FOCAL
 
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
@@ -39,7 +39,7 @@ struct pixel_t
     glm::vec3 pos3d;
 
     inline pixel_t() {}
-    pixel_t(int x, int y, float zinv);
+    pixel_t(int x, int y, float zinv, glm::vec3 pos3d);
     pixel_t(const fpixel_t& p);
     friend pixel_t operator-(const pixel_t& a, const pixel_t& b);
 };
@@ -50,7 +50,7 @@ struct fpixel_t
     float zinv;
     glm::vec3 pos3d;
 
-    fpixel_t(float x, float y, float zinv);
+    fpixel_t(float x, float y, float zinv, glm::vec3 pos3d);
     fpixel_t(const pixel_t& p);
     friend fpixel_t operator/(const fpixel_t& a, const float f);
     friend fpixel_t& operator+=(fpixel_t& a, const fpixel_t& b);

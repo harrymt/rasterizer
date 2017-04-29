@@ -18,6 +18,7 @@ float interpolate_f(float start, float end, float step, float max)
     return (end - start) * (step / (max - 1)) + start;
 }
 
+
 void interpolateVector(const glm::ivec2& a, const glm::ivec2& b, vector<glm::ivec2>& result)
 {
     int n = result.size();
@@ -33,12 +34,24 @@ void interpolateVector(const glm::ivec2& a, const glm::ivec2& b, vector<glm::ive
 void interpolatePixel(const pixel_t& a, const pixel_t& b, vector<pixel_t>& result)
 {
     int n = result.size();
-    fpixel_t step = fpixel_t(b - a) / (float) std::fmax(n-1, 1);
-    fpixel_t current(a);
+    float max = float(std::fmax(n - 1, 1));
+    glm::vec3 diff = glm::vec3(b.x - a.x, b.y - a.y, b.zinv - a.zinv) / max;
+    glm::vec3 diffPos = glm::vec3(b.pos3d * b.zinv - a.pos3d * a.zinv) / max;
+
+    glm::vec3 current(a.x, a.y, a.zinv);
+    glm::vec3 currentPos(a.pos3d * a.zinv);
+
     for (int i = 0; i < n; ++i)
     {
-        result[i] = pixel_t(current);
-        current += step;
+        result[i].x = current.x;
+        result[i].y = current.y;
+        result[i].zinv = current.z;
+        result[i].pos3d = currentPos / current.z;
+
+        current.x += diff.x;
+        current.y += diff.y;
+        current.z += diff.z;
+        currentPos += diffPos;
     }
 }
 
@@ -66,7 +79,7 @@ namespace glm
 {
     pixel_t abs(pixel_t p)
     {
-        return pixel_t(std::abs(p.x), std::abs(p.y), std::abs(p.zinv));
+        return pixel_t(std::abs(p.x), std::abs(p.y), std::abs(p.zinv), glm::abs(p.pos3d));
     }
 }
 
@@ -128,7 +141,9 @@ void computePolygonRows(const vector<pixel_t>& vertex_pixels, vector<pixel_t>& l
     {
         if (i == num_vertices - 1) j = 0;
         vector<pixel_t> edge(std::abs(vertex_pixels[i].y - vertex_pixels[j].y) + 1);
+        
         interpolatePixel(vertex_pixels[i], vertex_pixels[j], edge);
+
         for (pixel_t& pixel : edge)
         {
             pixel_t& left = left_pixels[pixel.y-min];
@@ -157,11 +172,19 @@ void drawRows(const vector<pixel_t>& left_pixels, const vector<pixel_t>& right_p
         float zinv_step;
         if (right.x - left.x == 0) zinv_step = 0;
         else zinv_step = (right.zinv - left.zinv)/(right.x - left.x);
-        for (int j = left.x; j <= right.x; ++j, zinv += zinv_step)
+
+        if (left.x == right.x) { continue; }
+        vector<pixel_t> row(right_pixels[i].x - left_pixels[i].x + 1);
+        interpolatePixel(left_pixels[i], right_pixels[i], row);
+        //vector<pixel_t> result(std::abs(left.y - right.y) + 1);
+        //interpolatePixel(left, right, result);
+        //for (pixel_t& in : result) {
+        for (int row_number = 0; row_number < row.size() && row[row_number].x <= right.x; row_number++, zinv += zinv_step)
         {
-            if (left.y >= SCREEN_HEIGHT || j >= SCREEN_WIDTH
-             || left.y < 0 || j < 0) continue;
-            pixelShader(pixel_t(j, left.y, zinv));
+            if (row[row_number].y >= SCREEN_HEIGHT || row[row_number].x >= SCREEN_WIDTH
+                || row[row_number].y < 0 || row[row_number].y < 0) continue;
+            //pixelShader(pixel_t(j, left.y, zinv, left.pos3d));
+            pixelShader(row[row_number]);
         }
     }
 }

@@ -34,6 +34,7 @@ Build/
 Source/glm
 .vs/
 Source/.vs/
+Source/Release/
 Source/Debug/
 Source/rasterizer.aps
 Source/rasterizer.rc
@@ -53,3 +54,5 @@ Source/raterizer.VC.db
 Source/raterizer.vcxproj
 
 *.opendb
+
+Source/Release/rasterizer\.tlog/
