@@ -25,7 +25,7 @@ http://www.cs.cmu.edu/afs/cs/academic/class/15869-f11/www/ <- Great resource
     - Anti Aliasing
 
 ### Rasterizer
-    - Finish Global illumination
+    - Global illumination
 
 
 ## How to Build
