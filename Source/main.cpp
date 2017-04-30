@@ -1,7 +1,7 @@
 #include "rasterizer.h"
 #include "omp.h"
 
-#define D2R(x) x*pi/180
+#define D2R(x) x * pi / 180
 
 SDL_Surface* screen;
 int t;
@@ -138,27 +138,28 @@ void pixelShader(const pixel_t& p)
 {
 	if (p.zinv > depth_buffer[p.y][p.x])
 	{
- 
 		depth_buffer[p.y][p.x] = p.zinv;
 
 		// Calculate illumination
 		glm::vec3 surfaceToLight = lightPos - p.zinv;
-		float r = glm::length(surfaceToLight);
-        //cout << "pos3d " << p.pos3d.x << ", " << p.pos3d.y << endl;
-        //cout << "r: " << r << endl;
-		float area = 4 * pi * r * r; // Bottom part of equation
-		float ratio = glm::dot(currentNormal, glm::normalize(surfaceToLight));
-        if (ratio < 0) { ratio = 0.0001; }
-		glm::vec3 b = lightPower / area;
-		glm::vec3 d = b * ratio;
-
+		float r = glm::length(surfaceToLight * currentReflectance);
         float strength = 2.0f;
-        float illumination = glm::clamp(1.0f - (r / strength), 0.0f, 1.0f);//  d + indirectLightPowerPerArea * currentReflectance; //  (lightPower * glm::max(d, 0.0f)) * currentReflectance + indirectLightPowerPerArea;
+        float illumination = glm::clamp(1.0f - (r / strength), 0.0f, 1.0f);
 
-        //cout << "p (" << p.x << ", " << p.y << ", " << p.zinv << ")" << endl;
-        //cout << "Illumination brig (" << illumination.r << ", " << illumination.g << ", " << illumination.b << ")" << endl;
 		PutPixelSDL(screen, p.x, p.y, illumination * currentColor);
 	}
+}
+
+void draw_light() {
+    float size = 0.8f;
+    vector<vertex_t> light(3);
+    currentNormal = glm::vec3(0.1f, 0.1f, 0.1f);
+    currentColor = glm::vec3(0.9f, 1.0f, 1.0f);;
+    currentReflectance = glm::vec3(0.9f, 0.5f, 0.5f);
+    light[0].position = lightPos - glm::vec3(size, size, size);
+    light[1].position = lightPos - glm::vec3(0, 0, size);
+    light[2].position = lightPos - glm::vec3(size, 0, size);
+    drawPolygon(light);
 }
 
 void draw()
@@ -175,17 +176,9 @@ void draw()
     }
     
    
-    // Draw light
-    float size = 0.8f;
-    vector<vertex_t> light(3);
-    currentNormal = glm::vec3(0.1f, 0.1f, 0.1f);
-    currentColor = glm::vec3(0.9f, 1.0f, 1.0f);;
-    currentReflectance = glm::vec3(0.9f, 0.5f, 0.5f);
-    light[0].position = lightPos - glm::vec3(size, size, size);
-    light[1].position = lightPos - glm::vec3(0, 0, size);
-    light[2].position = lightPos - glm::vec3(size, 0, size);
-    drawPolygon(light);
-
+    if (LIGHT_VISIBLE) {
+        draw_light();
+    }
 
     vector<vertex_t> vertices(3);
 

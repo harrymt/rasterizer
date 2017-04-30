@@ -13,6 +13,7 @@
 
 
 #define FOCAL 2.0f
+#define LIGHT_VISIBLE 0 // Show light source object, 0: hide the object (Note: light is still bright)
 #define SCREEN_WIDTH 1000
 #define SCREEN_HEIGHT 1000
 #define FOCAL_LENGTH SCREEN_HEIGHT / FOCAL
@@ -65,8 +66,6 @@ float interpolate_f(float start, float end, float step, float max);
 void interpolate(float start, float end, vector<float>& result);
 void interpolateVector(const glm::ivec2& a, const glm::ivec2& b, vector<glm::ivec2>& result);
 void interpolatePixel(const pixel_t& a, const pixel_t& b, vector<pixel_t>& result);
-int rand_i(int min, int max);
-float rand_f();
 glm::vec2 convertTo2D(glm::vec3 coords);
 void printVector(const char* name, glm::vec3 v);
 void update();
