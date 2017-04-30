@@ -4,6 +4,8 @@
 *.o
 *.obj
 glm/
+glm
+glm/*
 Build/
 
 # Precompiled Headers
