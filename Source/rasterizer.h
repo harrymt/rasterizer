@@ -13,7 +13,6 @@
 
 
 #define FOCAL 2.0f
-#define LIGHT_VISIBLE 0 // Show light source object, 0: hide the object (Note: light is still bright)
 #define SCREEN_WIDTH 1000
 #define SCREEN_HEIGHT 1000
 #define FOCAL_LENGTH SCREEN_HEIGHT / FOCAL

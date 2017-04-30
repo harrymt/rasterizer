@@ -152,11 +152,13 @@ void computePolygonRows(const vector<pixel_t>& vertex_pixels, vector<pixel_t>& l
             {
                 left.x = pixel.x;
                 left.zinv = pixel.zinv;
+                left.pos3d = pixel.pos3d;
             }
             if (pixel.x > right.x)
             {
                 right.x = pixel.x;
                 right.zinv = pixel.zinv;
+                right.pos3d = pixel.pos3d;
             }
         }
     }

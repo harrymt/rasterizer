@@ -9,9 +9,10 @@ vector<Triangle> triangles;
 glm::vec3 cameraPos(0, 0, -FOCAL);
 const float delta_displacement = 0.1f;
 
-glm::vec3 lightPos(0, 0, 0);
-glm::vec3 lightPower = 16.0f * glm::vec3(1, 1, 1); // P
-glm::vec3 indirectLightPowerPerArea = 0.5f * glm::vec3(1, 1, 1); // D
+glm::vec3 lightPos(0, -0.5, -0.7);
+glm::vec3 lightPower = 9.f * glm::vec3(1, 1, 1);
+glm::vec3 indirectLightPowerPerArea = 0.5f * glm::vec3(1, 1, 1);
+
 glm::vec3 currentNormal;
 glm::vec3 currentColor;
 glm::vec3 currentReflectance;
@@ -77,7 +78,7 @@ void update()
     if (keystate[SDLK_r])
     {
         cameraPos = {0, 0, -FOCAL};
-        lightPos = {0, 0, 0};
+        lightPos = {0, -0.5, -0.7};
         currentRot = glm::mat3(1, 0, 0, 0, 1, 0, 0, 0, 1);
     }
 
@@ -136,31 +137,24 @@ const glm::vec3 fastNormalize(const glm::vec3 &v)
 */
 void pixelShader(const pixel_t& p)
 {
-	if (p.zinv > depth_buffer[p.y][p.x])
-	{
-		depth_buffer[p.y][p.x] = p.zinv;
+    if (p.zinv > depth_buffer[p.y][p.x])
+    {
+        depth_buffer[p.y][p.x] = p.zinv;
 
-		// Calculate illumination
-		glm::vec3 surfaceToLight = lightPos - p.zinv;
-		float r = glm::length(surfaceToLight * currentReflectance);
-        float strength = 2.0f;
-        float illumination = glm::clamp(1.0f - (r / strength), 0.0f, 1.0f);
+        glm::vec3 surfaceToLight = lightPos - p.pos3d;
+        float r = glm::length(surfaceToLight);
 
-		PutPixelSDL(screen, p.x, p.y, illumination * currentColor);
-	}
+        float ratio = glm::dot(glm::normalize(surfaceToLight), currentNormal);
+        if (ratio < 0) { ratio = 0; };
+
+        glm::vec3 B = lightPower / (4 * pi * r * r);
+        glm::vec3 D = B * ratio;
+        glm::vec3 illumination = D + indirectLightPowerPerArea;
+
+        PutPixelSDL(screen, p.x, p.y, illumination * currentColor);
+    }
 }
 
-void draw_light() {
-    float size = 0.8f;
-    vector<vertex_t> light(3);
-    currentNormal = glm::vec3(0.1f, 0.1f, 0.1f);
-    currentColor = glm::vec3(0.9f, 1.0f, 1.0f);;
-    currentReflectance = glm::vec3(0.9f, 0.5f, 0.5f);
-    light[0].position = lightPos - glm::vec3(size, size, size);
-    light[1].position = lightPos - glm::vec3(0, 0, size);
-    light[2].position = lightPos - glm::vec3(size, 0, size);
-    drawPolygon(light);
-}
 
 void draw()
 {
@@ -175,10 +169,7 @@ void draw()
         }
     }
     
-   
-    if (LIGHT_VISIBLE) {
-        draw_light();
-    }
+
 
     vector<vertex_t> vertices(3);
 
