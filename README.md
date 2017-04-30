@@ -8,24 +8,24 @@ Rasterizer for the University of Bristol Computer Graphics course (course work 2
   - Bringing in other models
 
 ### Ray tracer
-    - Photon mapping / Caustics
+    - Photon mapping / Caustics (DOING)
 
 ### Rasterizer
 http://www.cs.cmu.edu/afs/cs/academic/class/15869-f11/www/ <- Great resource
-    - Finish Global Illumination
     - Parrellisation, different sort
-    - Shadows
+    - Shadows (DOING)
     - Anti aliasing -(FXAA or MLAA)
 
 ## DONE
 
 ### Ray tracer
+    - 50%
     - Parrellisation
     - Soft shadows
     - Anti Aliasing
 
 ### Rasterizer
-    - Global illumination
+    - 50%
 
 
 ## How to Build
