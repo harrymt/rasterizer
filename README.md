@@ -1,30 +1,25 @@
-# Rasterizer
+## Rasterizer
 
 Rasterizer for the University of Bristol Computer Graphics course (course work 2).
 
-# Extensions - 75% predicted grade
+### Extensions - 76% predicted grade
 
-### Ray tracer - 90% * 0.5
+#### Ray tracer - 90% * 0.5
     - Base : 50%
     - Optimisations : 4%
     - Parallelisation : 4%
     - Soft shadows : 4%
     - Anti Aliasing : 4%
-    - Photon mapping / ~Caustics~ / Colour bleeding : 20%
     - General Model loading 4%
-    - Spacial datastructures (Photon map)
+    - Colour bleeding : 10%
+    - Spacial datastructures (Photon map) : 10%
 
-### Rasterizer - 58% * 0.5
+#### Rasterizer - 62% * 0.5
     - Base : 50%
-    - Parallelisation : 4% *Questionable - not sure if I'll have time to port to kernels*
+    - Shadows : 4% (TODO)
+    - Anti Aliasing (FXAA or MLAA) : 4% (TODO)
     - Optimisations : 4%
-   
 
-### TODO
-http://www.cs.cmu.edu/afs/cs/academic/class/15869-f11/www/ <- Great resource
-    - Parrellisation, different sort
-    - Shadows (DOING)
-    - Anti aliasing -(FXAA or MLAA)
 
 ## How to Build
 
