@@ -4,6 +4,8 @@ Rasterizer for the University of Bristol Computer Graphics course (course work 2
 
 ### Extensions - 76% predicted grade
 
+***FOR BOTH PARTS WE NEED TO ENSURE THE CAMERA MOVEMENT WORKS CORRECTLY, HARRY CAN YOU ENSURE THIS IS THE CASE!***
+
 #### Ray tracer - 90% * 0.5
     - Base : 50%
     - Optimisations : 4%
@@ -16,8 +18,14 @@ Rasterizer for the University of Bristol Computer Graphics course (course work 2
 
 #### Rasterizer - 62% * 0.5
     - Base : 50%
+    - Towards deferred rendering
+    - Light source changes (Cone lighting?)
+    - Lightbuffer
     - Shadows : 4% (TODO)
-    - Anti Aliasing (FXAA or MLAA) : 4% (TODO)
+    - GPU Rendering (FXAA and Pixel Shading can be moved to GPU)
+    - Textures (Harry)
+    - Clipping (Harry)
+    - Anti Aliasing (FXAA or MLAA) : 4% (IMPLEMENT C SIDE)
     - Optimisations : 4%
 
 
