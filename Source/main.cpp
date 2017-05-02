@@ -31,6 +31,8 @@ glm::mat3 currentRot(1, 0, 0, 0, 1, 0, 0, 0, 1);
 
 float depth_buffer[SCREEN_HEIGHT][SCREEN_WIDTH];
 
+glm::vec3 screen_buffer[SCREEN_HEIGHT][SCREEN_WIDTH];
+
 
 void update()
 {
@@ -145,13 +147,13 @@ void pixelShader(const pixel_t& p)
         float r = glm::length(surfaceToLight);
 
         float ratio = glm::dot(glm::normalize(surfaceToLight), currentNormal);
-        if (ratio < 0) { ratio = 0; };
+        if (ratio < 0) ratio = 0;
 
         glm::vec3 B = lightPower / (4 * pi * r * r);
         glm::vec3 D = B * ratio;
         glm::vec3 illumination = D + indirectLightPowerPerArea;
 
-        PutPixelSDL(screen, p.x, p.y, illumination * currentColor);
+        screen_buffer[p.y][p.x] = illumination * currentColor;
     }
 }
 
@@ -161,15 +163,15 @@ void draw()
     SDL_FillRect(screen, 0, 0);
     if(SDL_MUSTLOCK(screen)) SDL_LockSurface(screen);
 
+    #pragma omp parallel for
     for (int i = 0; i < SCREEN_HEIGHT; ++i)
     {
         for (int j = 0; j < SCREEN_WIDTH; ++j)
         {
             depth_buffer[i][j] = 0;
+            screen_buffer[i][j] = glm::vec3(0.0f, 0.0f, 0.0f);
         }
     }
-    
-
 
     vector<vertex_t> vertices(3);
 
@@ -186,10 +188,70 @@ void draw()
         drawPolygon(vertices);
     }
 
+    #pragma omp parallel for
+    for (int i = 0; i < SCREEN_HEIGHT; ++i)
+    {
+        for (int j = 0; j < SCREEN_WIDTH; ++j)
+        {
+            PutPixelSDL(screen, j, i, fxaa(j, i));
+        }
+    }
+
     if (SDL_MUSTLOCK(screen)) SDL_UnlockSurface(screen);
     SDL_UpdateRect(screen, 0, 0, 0, 0);
 }
 
+float reducemul = 1.0f/8.0f;
+float reducemin = 1.0f/128.0f;
+float u_strength = 2.5f;
+glm::vec2 u_texel(1.0f/SCREEN_WIDTH, 1.0f/SCREEN_HEIGHT);
+
+glm::vec3 texture2D(float x, float y)
+{
+    if (x < 0.0f) x = 0.0f;
+    if (y < 0.0f) y = 0.0f;
+    if (x > 1.0f) x = 1.0f;
+    if (y > 1.0f) y = 1.0f;
+    return screen_buffer[glm::clamp((int) (y*SCREEN_HEIGHT-1), 0, SCREEN_HEIGHT-1)][glm::clamp((int) (x*SCREEN_WIDTH-1), 0, SCREEN_WIDTH-1)];
+}
+
+inline glm::vec3 texture2D(glm::vec2 coords)
+{
+    return texture2D(coords.x, coords.y);
+}
+
+glm::vec3 fxaa(int x_, int y_)
+{
+    //return screen_buffer[y_][x_];
+    glm::vec2 coords((float) x_/(float)SCREEN_WIDTH, (float) y_/(float)SCREEN_HEIGHT);
+    glm::vec3 centre = texture2D(coords);
+    glm::vec3 nw = texture2D(coords-u_texel);
+    glm::vec3 ne = texture2D(coords.x + u_texel.x, coords.y - u_texel.y);
+    glm::vec3 sw = texture2D(coords.x - u_texel.x, coords.y + u_texel.y);
+    glm::vec3 se = texture2D(coords+u_texel);
+
+    glm::vec3 gray(0.299f, 0.587f, 0.114f);
+    float mono_centre = glm::dot(centre, gray);
+    float mono_nw = glm::dot(nw, gray);
+    float mono_ne = glm::dot(ne, gray);
+    float mono_sw = glm::dot(sw, gray);
+    float mono_se = glm::dot(se, gray);
+
+    float mono_min = MIN(mono_centre, MIN(mono_nw, MIN(mono_ne, MIN(mono_sw, mono_se))));
+    float mono_max = MAX(mono_centre, MAX(mono_nw, MAX(mono_ne, MAX(mono_sw, mono_se))));
+
+    glm::vec2 dir(-((mono_nw + mono_ne) - (mono_sw + mono_se)), ((mono_nw + mono_sw) - (mono_ne + mono_se)));
+    float dir_reduce =  MAX((mono_nw + mono_ne + mono_sw + mono_se) * reducemul * 0.25, reducemin);
+    float dir_min = 1.0f / (MIN(abs(dir.x), abs(dir.y)) + dir_reduce);
+    // This can be changed to use glm min and max I think
+    dir = glm::vec2(MIN(u_strength, MAX(-u_strength, dir.x * dir_min))*u_texel.x, MIN(u_strength, MAX(-u_strength, dir.y * dir_min))*u_texel.y);
+
+    glm::vec3 resultA = 0.5f * (texture2D(coords + (-0.166667f * dir)) + texture2D(coords + 0.166667f * dir));
+    glm::vec3 resultB = 0.5f * resultA + 0.25f * (texture2D(coords + (-0.5f*dir)) + texture2D(coords + 0.5f*dir));
+
+    float mono_b = glm::dot(resultB, gray);
+    return mono_b < mono_min || mono_b > mono_max ? resultA : resultB;
+}
 
 int main()
 {
@@ -198,7 +260,7 @@ int main()
 
     // Fill triangles with test model
     LoadTestModel(triangles);
-    
+
 
     while (NoQuitMessageSDL())
     {

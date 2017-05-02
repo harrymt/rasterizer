@@ -79,4 +79,6 @@ void computePolygonRows(const vector<pixel_t>& vertex_pixels, vector<pixel_t>& l
 void drawRows(const vector<pixel_t>& left_pixels, const vector<pixel_t>& right_pixels);
 void drawPolygon(const vector<vertex_t>& vertices);
 
+glm::vec3 fxaa(int x, int y);
+
 #endif //RASTERIZER_INCLUDE

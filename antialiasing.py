@@ -134,7 +134,7 @@ def fxaa2(img):
         if x > 1.0: x = 1.0
         if y > 1.0: y = 1.0
         try:
-            return img[int(round(y*height-1))][int(round(x*width-1))]
+            return img[int(round(y*(height-1)))][int(round(x*(width-1)))]
         except IndexError:
             print(x, y)
     def rgb_percent(rgb):
