@@ -25,7 +25,7 @@ Rasterizer for the University of Bristol Computer Graphics course (course work 2
     - GPU Rendering (FXAA and Pixel Shading can be moved to GPU)
     - Textures (Harry)
     - Clipping (Harry)
-    - Anti Aliasing (FXAA or MLAA) : 4% (IMPLEMENT C SIDE)
+    - Anti Aliasing (FXAA) : 4%
     - Optimisations : 4%
 
 
