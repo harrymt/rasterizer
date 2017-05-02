@@ -5,21 +5,20 @@
 
 SDL_Surface* screen;
 int t;
-vector<Triangle> triangles;
+Triangle* triangles;
+int num_triangles;
 glm::vec3 cameraPos(0, 0, -FOCAL);
 const float delta_displacement = 0.1f;
 
 glm::vec3 lightPos(0, -0.5, -0.7);
-glm::vec3 lightDir(0.0f, 1.0f, 0.0f); //pointing down!
-// If this is upside down then just flip the corner signs
-glm::mat3 lightRot(0, 0, 1, 0, 1, 0, -1, 0, 0);
+glm::mat3 lightRot(1, 0, 0, 0, -1, 0, 0, 0, 1);
 
 glm::vec3 lightPower = 9.f * glm::vec3(1, 1, 1);
 glm::vec3 indirectLightPowerPerArea = 0.5f * glm::vec3(1, 1, 1);
+glm::vec3 indirectIllumination(0.2f, 0.2f, 0.2f);
 
 glm::vec3 currentNormal;
 glm::vec3 currentColor;
-glm::vec3 currentReflectance;
 
 const float theta = D2R(5);
 
@@ -137,7 +136,7 @@ void vertexShader(const vertex_t& v, pixel_t& p, pixel_t& l)
     l.pos3d = v.position;
     l.zinv = 1 / z;
     l.x = (int)(FOCAL_LENGTH_LIGHT * y / z) + LIGHT_HEIGHT / 2;
-    l.y = (int)(FOCAL_LENGTH * x / z) + LIGHT_WIDTH / 2;
+    l.y = (int)(FOCAL_LENGTH_LIGHT * x / z) + LIGHT_WIDTH / 2;
 }
 
 const glm::vec3 fastNormalize(const glm::vec3 &v)
@@ -155,16 +154,37 @@ const glm::vec3 fastNormalize(const glm::vec3 &v)
 void pixelShader(const int x, const int y)
 {
     framedata_t& px = frame_buffer[y][x];
+    glm::vec3 illumination;
 
-    glm::vec3 surfaceToLight = lightPos - px.pos;
-    float r = glm::length(surfaceToLight);
+    glm::vec3 lightRel = (px.pos - lightPos) * lightRot;
+    float xl = lightRel.x;
+    float yl = lightRel.y;
+    float zl = lightRel.z;
+    int ilx = (int)(FOCAL_LENGTH_LIGHT * xl / zl) + LIGHT_WIDTH / 2;
+    int ily = (int)(FOCAL_LENGTH_LIGHT * yl / zl) + LIGHT_HEIGHT / 2;
+    if (// If any of these are true, then the point is not lit by the light at all
+        ilx < 0 || ilx >= LIGHT_WIDTH || ily < 0 || ily >= LIGHT_HEIGHT 
+        // If the above was false, then we are within the field, but if our depth isn't
+        // what the light_buffer tells us is the closest depth to the light, then we are
+        // obviously occluded
+        || 1 / zl < light_buffer[ily][ilx])
+    {
+        // There is ambient lighting in the room
+        // TODO: We can make it so that cast shadows are slightly more bright than out of field shadows
+        illumination = indirectIllumination;
+    }
+    else
+    {
+        glm::vec3 surfaceToLight = lightPos - px.pos;
+        float r = glm::length(surfaceToLight);
 
-    float ratio = glm::dot(glm::normalize(surfaceToLight), px.normal);
-    if (ratio < 0) ratio = 0;
+        float ratio = glm::dot(glm::normalize(surfaceToLight), px.normal);
+        if (ratio < 0) ratio = 0;
 
-    glm::vec3 B = lightPower / (4 * pi * r * r);
-    glm::vec3 D = B * ratio;
-    glm::vec3 illumination = D + indirectLightPowerPerArea;
+        glm::vec3 B = lightPower / (4 * pi * r * r);
+        glm::vec3 D = B * ratio;
+        illumination = D + indirectLightPowerPerArea;
+    }
 
     px.colour = illumination * px.colour;
 }
@@ -182,21 +202,24 @@ void draw()
         {
             frame_buffer[i][j].depth = 0;
             frame_buffer[i][j].colour = glm::vec3(0.0f, 0.0f, 0.0f);
+            if (i < LIGHT_HEIGHT && j < LIGHT_WIDTH)
+            {
+                light_buffer[i][j] = 0;
+            }
         }
     }
 
     vertex_t vertices[3];
 
     // #pragma omp parallel for
-    for (Triangle& triangle : triangles)
+    for (int i = 0; i < num_triangles; i++)
     {
-		// TODO: Probably going to scrap this, we don't want globals, which will allow us to multithread this!
-        currentReflectance = triangle.color;
-        currentNormal = triangle.normal;
-        currentColor = triangle.color;
-        vertices[0].position = triangle.v0;
-        vertices[1].position = triangle.v1;
-        vertices[2].position = triangle.v2;
+        // TODO: Probably going to scrap this, we don't want globals, which will allow us to multithread this!
+        currentNormal = triangles[i].normal;
+        currentColor = triangles[i].color;
+        vertices[0].position = triangles[i].v0;
+        vertices[1].position = triangles[i].v1;
+        vertices[2].position = triangles[i].v2;
 
         drawPolygon(vertices);
     }
@@ -242,7 +265,6 @@ inline glm::vec3 texture2D(glm::vec2 coords)
 
 void fxaa(int x_, int y_)
 {
-    //return screen_buffer[y_][x_];
     glm::vec2 coords((float) x_/(float)SCREEN_WIDTH, (float) y_/(float)SCREEN_HEIGHT);
     glm::vec3 centre = texture2D(coords);
     glm::vec3 nw = texture2D(coords-u_texel);
@@ -279,14 +301,24 @@ int main()
     t = SDL_GetTicks();
 
     // Fill triangles with test model
-    LoadTestModel(triangles);
+    std::vector<Triangle> triangles_;
+    LoadTestModel(triangles_);
 
+    num_triangles = triangles_.size();
+    triangles = new Triangle[num_triangles];
+
+    for (size_t i = 0; i < num_triangles; ++i)
+    {
+        triangles[i] = triangles_[i];
+    }
 
     while (NoQuitMessageSDL())
     {
         update();
         draw();
     }
+
+    delete[] triangles;
 
     SDL_SaveBMP(screen, "screenshot.bmp");
     return 0;

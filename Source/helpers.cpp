@@ -71,22 +71,6 @@ void interpolate(float start, float end, vector<float>& result)
     }
 }
 
-glm::vec2 convertTo2D(glm::vec3 coords)
-{
-    float f = SCREEN_HEIGHT / 2;
-    float u = f * coords.x / coords.z + SCREEN_WIDTH / 2;
-    float v = f * coords.y / coords.z + SCREEN_HEIGHT / 2;
-    return glm::vec2(u, v);
-}
-
-glm::vec2 convertToLightRel(glm::vec3 coords)
-{
-	float f = LIGHT_HEIGHT / 2;
-	float u = f * coords.x / coords.z + LIGHT_WIDTH / 2;
-	float v = f * coords.y / coords.z + LIGHT_HEIGHT / 2;
-	return glm::vec2(u, v);
-}
-
 namespace glm
 {
     pixel_t abs(pixel_t p)
@@ -199,6 +183,7 @@ void drawRows(const vector<pixel_t>& left_pixels, const vector<pixel_t>& right_p
                 || row[row_number].y < 0 || row[row_number].y < 0) continue;
             //pixelShader(row[row_number]);
             pixel_t& px = row[row_number];
+            // Back face culling needs to be done for the light version!
             if (px.zinv > frame_buffer[px.y][px.x].depth)
             {
                 framedata_t& data = frame_buffer[px.y][px.x];
