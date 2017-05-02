@@ -114,10 +114,10 @@ void computePolygonRows(const pixel_t* vertex_pixels, vector<pixel_t>& left_pixe
 {
     int min = +std::numeric_limits<int>::max();
     int max = -std::numeric_limits<int>::max();
-	for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 3; i++)
     {
         min = MIN(min, vertex_pixels[i].y);
-		max = MAX(max, vertex_pixels[i].y);
+        max = MAX(max, vertex_pixels[i].y);
     }
     size_t nrows = max - min + 1;
 
@@ -158,7 +158,11 @@ void computePolygonRows(const pixel_t* vertex_pixels, vector<pixel_t>& left_pixe
     }
 }
 
-void drawRows(const vector<pixel_t>& left_pixels, const vector<pixel_t>& right_pixels, glm::vec3 normal, glm::vec3 colour)
+void drawRows(const vector<pixel_t>& left_pixels,
+              const vector<pixel_t>& right_pixels, 
+              const vector<pixel_t>& left_light, 
+              const vector<pixel_t>& right_light, 
+              glm::vec3 normal, glm::vec3 colour)
 {
     for (size_t i = 0; i < left_pixels.size(); ++i)
     {
@@ -172,14 +176,10 @@ void drawRows(const vector<pixel_t>& left_pixels, const vector<pixel_t>& right_p
         if (left.x == right.x) { continue; }
         vector<pixel_t> row(right_pixels[i].x - left_pixels[i].x + 1);
         interpolatePixel(left_pixels[i], right_pixels[i], row);
-        //vector<pixel_t> result(std::abs(left.y - right.y) + 1);
-        //interpolatePixel(left, right, result);
-        //for (pixel_t& in : result) {
         for (int row_number = 0; row_number < row.size() && row[row_number].x <= right.x; row_number++, zinv += zinv_step)
         {
             if (row[row_number].y >= SCREEN_HEIGHT || row[row_number].x >= SCREEN_WIDTH
                 || row[row_number].y < 0 || row[row_number].y < 0) continue;
-            //pixelShader(row[row_number]);
             pixel_t& px = row[row_number];
             // Back face culling needs to be done for the light version!
             if (px.zinv > frame_buffer[px.y][px.x].depth)
@@ -208,5 +208,5 @@ void drawPolygon(Triangle& triangle)
     vector<pixel_t> right_light;
     computePolygonRows(vertex_pixels, left_pixels, right_pixels);
     //computePolygonRows(vertex_light, left_light, right_light);
-    drawRows(left_pixels, right_pixels/*, left_light, right_light*/, triangle.normal, triangle.color);
+    drawRows(left_pixels, right_pixels, left_light, right_light, triangle.normal, triangle.color);
 }

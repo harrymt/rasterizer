@@ -11,7 +11,7 @@ glm::vec3 cameraPos(0, 0, -FOCAL);
 const float delta_displacement = 0.1f;
 
 glm::vec3 lightPos(0, -0.5, -0.7);
-glm::mat3 lightRot(1, 0, 0, 0, -1, 0, 0, 0, 1);
+glm::mat3 lightRot(1, 0, 0, 0, 0, -1, 0, 1, 0);
 
 glm::vec3 lightPower = 9.f * glm::vec3(1, 1, 1);
 glm::vec3 indirectLightPowerPerArea = 0.5f * glm::vec3(1, 1, 1);
@@ -129,8 +129,7 @@ void vertexShader(const vertex_t& v, pixel_t& p, pixel_t& l)
     x = lightRel.x;
     y = lightRel.y;
     z = lightRel.z;
-    // XXX: don't think this will be necessary!
-    l.pos3d = v;
+    //l.pos3d = v;
     l.zinv = 1 / z;
     l.x = (int)(FOCAL_LENGTH_LIGHT * y / z) + LIGHT_HEIGHT / 2;
     l.y = (int)(FOCAL_LENGTH_LIGHT * x / z) + LIGHT_WIDTH / 2;
@@ -138,9 +137,9 @@ void vertexShader(const vertex_t& v, pixel_t& p, pixel_t& l)
 
 const glm::vec3 fastNormalize(const glm::vec3 &v)
 {
-	const float len_sq = v.x * v.x + v.y * v.y + v.z * v.z;
-	const float len_inv = sqrt(len_sq);
-	return glm::vec3(v.x * len_inv, v.y * len_inv, v.z * len_inv);
+    const float len_sq = v.x * v.x + v.y * v.y + v.z * v.z;
+    const float len_inv = sqrt(len_sq);
+    return glm::vec3(v.x * len_inv, v.y * len_inv, v.z * len_inv);
 }
 
 /**
@@ -226,8 +225,8 @@ void draw()
     {
         for (int j = 0; j < SCREEN_WIDTH; ++j)
         {
-            fxaa(j, i);
-            PutPixelSDL(screen, j, i, frame_buffer[i][j].fxaa_colour);
+            //fxaa(j, i);
+            PutPixelSDL(screen, j, i, frame_buffer[i][j].colour);
         }
     }
 

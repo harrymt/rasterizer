@@ -83,7 +83,7 @@ void pixelShader(const int x, const int y);
 //void drawPolygonEdges(const vector<vertex_t>& vertices);
 //void drawLineSDL(SDL_Surface* surface, const pixel_t& a, const pixel_t& b, const colour_t& colour);
 void computePolygonRows(const pixel_t* vertex_pixels, vector<pixel_t>& left_pixels, vector<pixel_t>& right_pixels);
-void drawRows(const vector<pixel_t>& left_pixels, const vector<pixel_t>& right_pixels, glm::vec3 normal, glm::vec3 colour);
+void drawRows(const vector<pixel_t>& left_pixels, const vector<pixel_t>& right_pixels, const vector<pixel_t>& left_light, const vector<pixel_t>& right_light, glm::vec3 normal, glm::vec3 colour);
 void drawPolygon(Triangle& triangle);
 
 void fxaa(int x, int y);
