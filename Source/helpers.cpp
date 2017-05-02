@@ -95,6 +95,7 @@ namespace glm
     }
 }
 
+/*
 void drawLineSDL(SDL_Surface* surface, const pixel_t& a, const pixel_t& b, const colour_t& colour)
 {
     pixel_t delta = glm::abs(a - b);
@@ -125,7 +126,7 @@ void drawPolygonEdges(const vector<vertex_t>& vertices)
         drawLineSDL(screen, projected_vertices[i], projected_vertices[j], colour);
     }
     drawLineSDL(screen, projected_vertices[num_vertices-1], projected_vertices[0], colour);
-}
+}*/
 
 void computePolygonRows(const pixel_t* vertex_pixels, vector<pixel_t>& left_pixels, vector<pixel_t>& right_pixels)
 {
@@ -213,13 +214,17 @@ void drawRows(const vector<pixel_t>& left_pixels, const vector<pixel_t>& right_p
 void drawPolygon(const vertex_t* vertices)
 {
     pixel_t vertex_pixels[3];
+    pixel_t vertex_light[3];
     for (int i = 0; i < 3; ++i)
     {
-        vertexShader(vertices[i], vertex_pixels[i]);
+        vertexShader(vertices[i], vertex_pixels[i], vertex_light[i]);
     }
 
     vector<pixel_t> left_pixels;
     vector<pixel_t> right_pixels;
+    vector<pixel_t> left_light;
+    vector<pixel_t> right_light;
     computePolygonRows(vertex_pixels, left_pixels, right_pixels);
-    drawRows(left_pixels, right_pixels);
+    //computePolygonRows(vertex_light, left_light, right_light);
+    drawRows(left_pixels, right_pixels/*, left_light, right_light*/);
 }

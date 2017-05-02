@@ -84,11 +84,11 @@ void printVector(const char* name, glm::vec3 v);
 void update();
 void draw();
 
-void vertexShader(const vertex_t& v, pixel_t& p);
+void vertexShader(const vertex_t& v, pixel_t& p, pixel_t& l);
 void pixelShader(const int x, const int y);
 
-void drawPolygonEdges(const vector<vertex_t>& vertices);
-void drawLineSDL(SDL_Surface* surface, const pixel_t& a, const pixel_t& b, const colour_t& colour);
+//void drawPolygonEdges(const vector<vertex_t>& vertices);
+//void drawLineSDL(SDL_Surface* surface, const pixel_t& a, const pixel_t& b, const colour_t& colour);
 void computePolygonRows(const pixel_t* vertex_pixels, vector<pixel_t>& left_pixels, vector<pixel_t>& right_pixels);
 void drawRows(const vector<pixel_t>& left_pixels, const vector<pixel_t>& right_pixels);
 void drawPolygon(const vertex_t* vertices);
