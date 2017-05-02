@@ -61,6 +61,15 @@ struct vertex_t
     glm::vec3 position;
 };
 
+struct framedata_t
+{
+    float depth;
+    glm::vec3 normal;
+    glm::vec3 colour;
+    glm::vec3 fxaa_colour;
+    pixel_t px;
+};
+
 float interpolate_f(float start, float end, float step, float max);
 void interpolate(float start, float end, vector<float>& result);
 void interpolateVector(const glm::ivec2& a, const glm::ivec2& b, vector<glm::ivec2>& result);

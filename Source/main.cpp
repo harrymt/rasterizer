@@ -29,9 +29,7 @@ const glm::mat3 rotc(cos(-theta),  0, sin(-theta),
 
 glm::mat3 currentRot(1, 0, 0, 0, 1, 0, 0, 0, 1);
 
-float depth_buffer[SCREEN_HEIGHT][SCREEN_WIDTH];
-
-glm::vec3 screen_buffer[SCREEN_HEIGHT][SCREEN_WIDTH];
+framedata_t frame_buffer[SCREEN_HEIGHT][SCREEN_WIDTH];
 
 
 void update()
@@ -139,9 +137,9 @@ const glm::vec3 fastNormalize(const glm::vec3 &v)
 */
 void pixelShader(const pixel_t& p)
 {
-    if (p.zinv > depth_buffer[p.y][p.x])
+    if (p.zinv > frame_buffer[p.y][p.x].depth)
     {
-        depth_buffer[p.y][p.x] = p.zinv;
+        frame_buffer[p.y][p.x].depth = p.zinv;
 
         glm::vec3 surfaceToLight = lightPos - p.pos3d;
         float r = glm::length(surfaceToLight);
@@ -153,7 +151,7 @@ void pixelShader(const pixel_t& p)
         glm::vec3 D = B * ratio;
         glm::vec3 illumination = D + indirectLightPowerPerArea;
 
-        screen_buffer[p.y][p.x] = illumination * currentColor;
+        frame_buffer[p.y][p.x].colour = illumination * currentColor;
     }
 }
 
@@ -168,8 +166,8 @@ void draw()
     {
         for (int j = 0; j < SCREEN_WIDTH; ++j)
         {
-            depth_buffer[i][j] = 0;
-            screen_buffer[i][j] = glm::vec3(0.0f, 0.0f, 0.0f);
+            frame_buffer[i][j].depth = 0;
+            frame_buffer[i][j].colour = glm::vec3(0.0f, 0.0f, 0.0f);
         }
     }
 
@@ -208,7 +206,8 @@ glm::vec2 u_texel(1.0f/SCREEN_WIDTH, 1.0f/SCREEN_HEIGHT);
 
 inline glm::vec3 texture2D(float x, float y)
 {
-    return screen_buffer[glm::clamp((int) (glm::clamp(y, 0.0f, 1.0f)*SCREEN_HEIGHT-1), 0, SCREEN_HEIGHT-1)][glm::clamp((int) (glm::clamp(x, 0.0f, 1.0f)*SCREEN_WIDTH-1), 0, SCREEN_WIDTH-1)];
+    return frame_buffer[glm::clamp((int) (glm::clamp(y, 0.0f, 1.0f)*SCREEN_HEIGHT-1), 0, SCREEN_HEIGHT-1)]
+                       [glm::clamp((int) (glm::clamp(x, 0.0f, 1.0f)*SCREEN_WIDTH-1), 0, SCREEN_WIDTH-1)].colour;
 }
 
 inline glm::vec3 texture2D(glm::vec2 coords)
