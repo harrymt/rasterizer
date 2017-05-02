@@ -19,10 +19,10 @@ Rasterizer for the University of Bristol Computer Graphics course (course work 2
 #### Rasterizer - 62% * 0.5
     - Base : 50%
     - Towards deferred rendering
-    - Light source changes (Cone lighting?)
-    - Lightbuffer
+    - Light source changes (Cone lighting?) (TODO)
+    - Lightbuffer (TODO)
     - Shadows : 4% (TODO)
-    - GPU Rendering (FXAA and Pixel Shading can be moved to GPU)
+    - GPU Rendering (FXAA and Pixel Shading can be moved to GPU) (TODO)
     - Textures (Harry)
     - Clipping (Harry)
     - Anti Aliasing (FXAA) : 4%
