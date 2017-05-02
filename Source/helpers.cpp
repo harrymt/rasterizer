@@ -4,8 +4,6 @@
 extern SDL_Surface* screen;
 
 extern framedata_t frame_buffer[SCREEN_HEIGHT][SCREEN_WIDTH];
-extern glm::vec3 currentNormal;
-extern glm::vec3 currentColor;
 
 void printVector(const char* name, glm::vec3 v)
 {
@@ -160,7 +158,7 @@ void computePolygonRows(const pixel_t* vertex_pixels, vector<pixel_t>& left_pixe
     }
 }
 
-void drawRows(const vector<pixel_t>& left_pixels, const vector<pixel_t>& right_pixels)
+void drawRows(const vector<pixel_t>& left_pixels, const vector<pixel_t>& right_pixels, glm::vec3 normal, glm::vec3 colour)
 {
     for (size_t i = 0; i < left_pixels.size(); ++i)
     {
@@ -188,22 +186,21 @@ void drawRows(const vector<pixel_t>& left_pixels, const vector<pixel_t>& right_p
             {
                 framedata_t& data = frame_buffer[px.y][px.x];
                 data.depth = px.zinv;
-                data.normal = currentNormal;
-                data.colour = currentColor;
+                data.normal = normal;
+                data.colour = colour;
                 data.pos = px.pos3d;
             }
         }
     }
 }
 
-void drawPolygon(const vertex_t* vertices)
+void drawPolygon(Triangle& triangle)
 {
     pixel_t vertex_pixels[3];
     pixel_t vertex_light[3];
-    for (int i = 0; i < 3; ++i)
-    {
-        vertexShader(vertices[i], vertex_pixels[i], vertex_light[i]);
-    }
+    vertexShader(triangle.v0, vertex_pixels[0], vertex_light[0]);
+    vertexShader(triangle.v1, vertex_pixels[1], vertex_light[1]);
+    vertexShader(triangle.v2, vertex_pixels[2], vertex_light[2]);
 
     vector<pixel_t> left_pixels;
     vector<pixel_t> right_pixels;
@@ -211,5 +208,5 @@ void drawPolygon(const vertex_t* vertices)
     vector<pixel_t> right_light;
     computePolygonRows(vertex_pixels, left_pixels, right_pixels);
     //computePolygonRows(vertex_light, left_light, right_light);
-    drawRows(left_pixels, right_pixels/*, left_light, right_light*/);
+    drawRows(left_pixels, right_pixels/*, left_light, right_light*/, triangle.normal, triangle.color);
 }

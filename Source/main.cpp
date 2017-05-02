@@ -17,9 +17,6 @@ glm::vec3 lightPower = 9.f * glm::vec3(1, 1, 1);
 glm::vec3 indirectLightPowerPerArea = 0.5f * glm::vec3(1, 1, 1);
 glm::vec3 indirectIllumination(0.2f, 0.2f, 0.2f);
 
-glm::vec3 currentNormal;
-glm::vec3 currentColor;
-
 const float theta = D2R(5);
 
 const glm::mat3 rota(cos(theta),  0, sin(theta),
@@ -117,14 +114,14 @@ void update()
 
 void vertexShader(const vertex_t& v, pixel_t& p, pixel_t& l)
 {
-    glm::vec3 point = (v.position - cameraPos) * currentRot;
-    glm::vec3 lightRel = (v.position - lightPos) * lightRot;
+    glm::vec3 point = (v - cameraPos) * currentRot;
+    glm::vec3 lightRel = (v - lightPos) * lightRot;
 
     float x = point.x;
     float y = point.y;
     float z = point.z;
 
-    p.pos3d = v.position;
+    p.pos3d = v;
     p.zinv = 1/z;
     p.x = (int) (FOCAL_LENGTH * x/z) + SCREEN_WIDTH / 2;
     p.y = (int) (FOCAL_LENGTH * y/z) + SCREEN_HEIGHT / 2;
@@ -133,7 +130,7 @@ void vertexShader(const vertex_t& v, pixel_t& p, pixel_t& l)
     y = lightRel.y;
     z = lightRel.z;
     // XXX: don't think this will be necessary!
-    l.pos3d = v.position;
+    l.pos3d = v;
     l.zinv = 1 / z;
     l.x = (int)(FOCAL_LENGTH_LIGHT * y / z) + LIGHT_HEIGHT / 2;
     l.y = (int)(FOCAL_LENGTH_LIGHT * x / z) + LIGHT_WIDTH / 2;
@@ -209,19 +206,10 @@ void draw()
         }
     }
 
-    vertex_t vertices[3];
-
-    // #pragma omp parallel for
+    //#pragma omp parallel for
     for (int i = 0; i < num_triangles; i++)
     {
-        // TODO: Probably going to scrap this, we don't want globals, which will allow us to multithread this!
-        currentNormal = triangles[i].normal;
-        currentColor = triangles[i].color;
-        vertices[0].position = triangles[i].v0;
-        vertices[1].position = triangles[i].v1;
-        vertices[2].position = triangles[i].v2;
-
-        drawPolygon(vertices);
+        drawPolygon(triangles[i]);
     }
 
     #pragma omp parallel for
