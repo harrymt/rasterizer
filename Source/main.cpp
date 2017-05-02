@@ -135,24 +135,23 @@ const glm::vec3 fastNormalize(const glm::vec3 &v)
 /**
 * The nearer the pixel.pos3d is to the lightPos, the brighter it should be.
 */
-void pixelShader(const pixel_t& p)
+// XXX: Pixel shader will now run after the rest of the work is done
+// This allows us to perform it on the GPU
+void pixelShader(const int x, const int y)
 {
-    if (p.zinv > frame_buffer[p.y][p.x].depth)
-    {
-        frame_buffer[p.y][p.x].depth = p.zinv;
+    framedata_t& px = frame_buffer[y][x];
 
-        glm::vec3 surfaceToLight = lightPos - p.pos3d;
-        float r = glm::length(surfaceToLight);
+    glm::vec3 surfaceToLight = lightPos - px.pos;
+    float r = glm::length(surfaceToLight);
 
-        float ratio = glm::dot(glm::normalize(surfaceToLight), currentNormal);
-        if (ratio < 0) ratio = 0;
+    float ratio = glm::dot(glm::normalize(surfaceToLight), px.normal);
+    if (ratio < 0) ratio = 0;
 
-        glm::vec3 B = lightPower / (4 * pi * r * r);
-        glm::vec3 D = B * ratio;
-        glm::vec3 illumination = D + indirectLightPowerPerArea;
+    glm::vec3 B = lightPower / (4 * pi * r * r);
+    glm::vec3 D = B * ratio;
+    glm::vec3 illumination = D + indirectLightPowerPerArea;
 
-        frame_buffer[p.y][p.x].colour = illumination * currentColor;
-    }
+    px.colour = illumination * px.colour;
 }
 
 
@@ -191,7 +190,17 @@ void draw()
     {
         for (int j = 0; j < SCREEN_WIDTH; ++j)
         {
-            PutPixelSDL(screen, j, i, fxaa(j, i));
+            pixelShader(j, i);
+        }
+    }
+
+    #pragma omp parallel for
+    for (int i = 0; i < SCREEN_HEIGHT; ++i)
+    {
+        for (int j = 0; j < SCREEN_WIDTH; ++j)
+        {
+            fxaa(j, i);
+            PutPixelSDL(screen, j, i, frame_buffer[i][j].fxaa_colour);
         }
     }
 
@@ -215,7 +224,7 @@ inline glm::vec3 texture2D(glm::vec2 coords)
     return texture2D(coords.x, coords.y);
 }
 
-glm::vec3 fxaa(int x_, int y_)
+void fxaa(int x_, int y_)
 {
     //return screen_buffer[y_][x_];
     glm::vec2 coords((float) x_/(float)SCREEN_WIDTH, (float) y_/(float)SCREEN_HEIGHT);
@@ -245,7 +254,7 @@ glm::vec3 fxaa(int x_, int y_)
     glm::vec3 resultB = 0.5f * resultA + 0.25f * (texture2D(coords + (-0.5f*dir)) + texture2D(coords + 0.5f*dir));
 
     float mono_b = glm::dot(resultB, gray);
-    return mono_b < mono_min || mono_b > mono_max ? resultA : resultB;
+    frame_buffer[y_][x_].fxaa_colour = mono_b < mono_min || mono_b > mono_max ? resultA : resultB;
 }
 
 int main()

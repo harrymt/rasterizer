@@ -3,6 +3,10 @@
 
 extern SDL_Surface* screen;
 
+extern framedata_t frame_buffer[SCREEN_HEIGHT][SCREEN_WIDTH];
+extern glm::vec3 currentNormal;
+extern glm::vec3 currentColor;
+
 void printVector(const char* name, glm::vec3 v)
 {
     cout << name << ": " << v.x << "," << v.y << "," << v.z << endl;
@@ -141,7 +145,7 @@ void computePolygonRows(const vector<pixel_t>& vertex_pixels, vector<pixel_t>& l
     {
         if (i == num_vertices - 1) j = 0;
         vector<pixel_t> edge(std::abs(vertex_pixels[i].y - vertex_pixels[j].y) + 1);
-        
+
         interpolatePixel(vertex_pixels[i], vertex_pixels[j], edge);
 
         for (pixel_t& pixel : edge)
@@ -185,8 +189,16 @@ void drawRows(const vector<pixel_t>& left_pixels, const vector<pixel_t>& right_p
         {
             if (row[row_number].y >= SCREEN_HEIGHT || row[row_number].x >= SCREEN_WIDTH
                 || row[row_number].y < 0 || row[row_number].y < 0) continue;
-            //pixelShader(pixel_t(j, left.y, zinv, left.pos3d));
-            pixelShader(row[row_number]);
+            //pixelShader(row[row_number]);
+            pixel_t& px = row[row_number];
+            if (px.zinv > frame_buffer[px.y][px.x].depth)
+            {
+                framedata_t& data = frame_buffer[px.y][px.x];
+                data.depth = px.zinv;
+                data.normal = currentNormal;
+                data.colour = currentColor;
+                data.pos = px.pos3d;
+            }
         }
     }
 }

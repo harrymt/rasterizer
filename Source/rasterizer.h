@@ -67,7 +67,7 @@ struct framedata_t
     glm::vec3 normal;
     glm::vec3 colour;
     glm::vec3 fxaa_colour;
-    pixel_t px;
+    glm::vec3 pos;
 };
 
 float interpolate_f(float start, float end, float step, float max);
@@ -80,7 +80,7 @@ void update();
 void draw();
 
 void vertexShader(const vertex_t& v, pixel_t& p);
-void pixelShader(const pixel_t& p);
+void pixelShader(const int x, const int y);
 
 void drawPolygonEdges(const vector<vertex_t>& vertices);
 void drawLineSDL(SDL_Surface* surface, const pixel_t& a, const pixel_t& b, const colour_t& colour);
@@ -88,6 +88,6 @@ void computePolygonRows(const vector<pixel_t>& vertex_pixels, vector<pixel_t>& l
 void drawRows(const vector<pixel_t>& left_pixels, const vector<pixel_t>& right_pixels);
 void drawPolygon(const vector<vertex_t>& vertices);
 
-glm::vec3 fxaa(int x, int y);
+void fxaa(int x, int y);
 
 #endif //RASTERIZER_INCLUDE
