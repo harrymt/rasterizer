@@ -206,13 +206,9 @@ float reducemin = 1.0f/128.0f;
 float u_strength = 2.5f;
 glm::vec2 u_texel(1.0f/SCREEN_WIDTH, 1.0f/SCREEN_HEIGHT);
 
-glm::vec3 texture2D(float x, float y)
+inline glm::vec3 texture2D(float x, float y)
 {
-    if (x < 0.0f) x = 0.0f;
-    if (y < 0.0f) y = 0.0f;
-    if (x > 1.0f) x = 1.0f;
-    if (y > 1.0f) y = 1.0f;
-    return screen_buffer[glm::clamp((int) (y*SCREEN_HEIGHT-1), 0, SCREEN_HEIGHT-1)][glm::clamp((int) (x*SCREEN_WIDTH-1), 0, SCREEN_WIDTH-1)];
+    return screen_buffer[glm::clamp((int) (glm::clamp(y, 0.0f, 1.0f)*SCREEN_HEIGHT-1), 0, SCREEN_HEIGHT-1)][glm::clamp((int) (glm::clamp(x, 0.0f, 1.0f)*SCREEN_WIDTH-1), 0, SCREEN_WIDTH-1)];
 }
 
 inline glm::vec3 texture2D(glm::vec2 coords)
