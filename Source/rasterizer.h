@@ -13,9 +13,13 @@
 
 
 #define FOCAL 2.0f
-#define SCREEN_WIDTH 1000
-#define SCREEN_HEIGHT 1000
+#define SCREEN_WIDTH 500
+#define SCREEN_HEIGHT 500
+#define FOCAL_LIGHT 0.1f
+#define LIGHT_WIDTH 50
+#define LIGHT_HEIGHT 50
 #define FOCAL_LENGTH SCREEN_HEIGHT / FOCAL
+#define FOCAL_LENGTH_LIGHT LIGHT_HEIGHT / FOCAL_LIGHT
 
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
@@ -75,6 +79,7 @@ void interpolate(float start, float end, vector<float>& result);
 void interpolateVector(const glm::ivec2& a, const glm::ivec2& b, vector<glm::ivec2>& result);
 void interpolatePixel(const pixel_t& a, const pixel_t& b, vector<pixel_t>& result);
 glm::vec2 convertTo2D(glm::vec3 coords);
+glm::vec2 convertToLightRel(glm::vec3 coords);
 void printVector(const char* name, glm::vec3 v);
 void update();
 void draw();
@@ -84,9 +89,9 @@ void pixelShader(const int x, const int y);
 
 void drawPolygonEdges(const vector<vertex_t>& vertices);
 void drawLineSDL(SDL_Surface* surface, const pixel_t& a, const pixel_t& b, const colour_t& colour);
-void computePolygonRows(const vector<pixel_t>& vertex_pixels, vector<pixel_t>& left_pixels, vector<pixel_t>& right_pixels);
+void computePolygonRows(const pixel_t* vertex_pixels, vector<pixel_t>& left_pixels, vector<pixel_t>& right_pixels);
 void drawRows(const vector<pixel_t>& left_pixels, const vector<pixel_t>& right_pixels);
-void drawPolygon(const vector<vertex_t>& vertices);
+void drawPolygon(const vertex_t* vertices);
 
 void fxaa(int x, int y);
 

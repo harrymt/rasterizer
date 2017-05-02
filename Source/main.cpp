@@ -10,6 +10,7 @@ glm::vec3 cameraPos(0, 0, -FOCAL);
 const float delta_displacement = 0.1f;
 
 glm::vec3 lightPos(0, -0.5, -0.7);
+glm::vec3 lightDir(0.0f, 1.0f, 0.0f); //pointing down!
 glm::vec3 lightPower = 9.f * glm::vec3(1, 1, 1);
 glm::vec3 indirectLightPowerPerArea = 0.5f * glm::vec3(1, 1, 1);
 
@@ -30,6 +31,7 @@ const glm::mat3 rotc(cos(-theta),  0, sin(-theta),
 glm::mat3 currentRot(1, 0, 0, 0, 1, 0, 0, 0, 1);
 
 framedata_t frame_buffer[SCREEN_HEIGHT][SCREEN_WIDTH];
+float light_buffer[LIGHT_HEIGHT][LIGHT_WIDTH];
 
 
 void update()
@@ -170,11 +172,12 @@ void draw()
         }
     }
 
-    vector<vertex_t> vertices(3);
+    vertex_t vertices[3];
 
     // #pragma omp parallel for
     for (Triangle& triangle : triangles)
     {
+		// TODO: Probably going to scrap this, we don't want globals, which will allow us to multithread this!
         currentReflectance = triangle.color;
         currentNormal = triangle.normal;
         currentColor = triangle.color;

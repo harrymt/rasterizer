@@ -79,6 +79,14 @@ glm::vec2 convertTo2D(glm::vec3 coords)
     return glm::vec2(u, v);
 }
 
+glm::vec2 convertToLightRel(glm::vec3 coords)
+{
+	float f = LIGHT_HEIGHT / 2;
+	float u = f * coords.x / coords.z + LIGHT_WIDTH / 2;
+	float v = f * coords.y / coords.z + LIGHT_HEIGHT / 2;
+	return glm::vec2(u, v);
+}
+
 namespace glm
 {
     pixel_t abs(pixel_t p)
@@ -119,14 +127,14 @@ void drawPolygonEdges(const vector<vertex_t>& vertices)
     drawLineSDL(screen, projected_vertices[num_vertices-1], projected_vertices[0], colour);
 }
 
-void computePolygonRows(const vector<pixel_t>& vertex_pixels, vector<pixel_t>& left_pixels, vector<pixel_t>& right_pixels)
+void computePolygonRows(const pixel_t* vertex_pixels, vector<pixel_t>& left_pixels, vector<pixel_t>& right_pixels)
 {
     int min = +std::numeric_limits<int>::max();
     int max = -std::numeric_limits<int>::max();
-    for (auto& vertex : vertex_pixels)
+	for (int i = 0; i < 3; i++)
     {
-        min = MIN(min, vertex.y);
-        max = MAX(max, vertex.y);
+        min = MIN(min, vertex_pixels[i].y);
+		max = MAX(max, vertex_pixels[i].y);
     }
     size_t nrows = max - min + 1;
 
@@ -140,10 +148,9 @@ void computePolygonRows(const vector<pixel_t>& vertex_pixels, vector<pixel_t>& l
         left_pixels[i].y = right_pixels[i].y = i + min;
     }
 
-    size_t num_vertices = vertex_pixels.size();
-    for (size_t i = 0, j = 1; i < num_vertices; ++i, ++j)
+    for (size_t i = 0, j = 1; i < 3; ++i, ++j)
     {
-        if (i == num_vertices - 1) j = 0;
+        if (i == 2) j = 0;
         vector<pixel_t> edge(std::abs(vertex_pixels[i].y - vertex_pixels[j].y) + 1);
 
         interpolatePixel(vertex_pixels[i], vertex_pixels[j], edge);
@@ -203,11 +210,10 @@ void drawRows(const vector<pixel_t>& left_pixels, const vector<pixel_t>& right_p
     }
 }
 
-void drawPolygon(const vector<vertex_t>& vertices)
+void drawPolygon(const vertex_t* vertices)
 {
-    int num_vertices = vertices.size();
-    vector<pixel_t> vertex_pixels(num_vertices);
-    for (int i = 0; i < num_vertices; ++i)
+    pixel_t vertex_pixels[3];
+    for (int i = 0; i < 3; ++i)
     {
         vertexShader(vertices[i], vertex_pixels[i]);
     }
