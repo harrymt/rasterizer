@@ -11,6 +11,7 @@
 #include "SDLauxiliary.h"
 #include "TestModel.h"
 #include <sstream>
+#include <fstream>
 
 #define OPEN_CL
 
@@ -33,12 +34,6 @@
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 
 const float pi = (float) atan(1.0);
-
-using std::cout;
-using std::vector;
-using std::endl;
-
-typedef glm::vec3 colour_t;
 
 struct pixel_t;
 struct fpixel_t;
@@ -102,7 +97,9 @@ struct framebuffer_t
     float depths[SCREEN_HEIGHT][SCREEN_WIDTH];
     float3 normals[SCREEN_HEIGHT][SCREEN_WIDTH];
     float3 colours[SCREEN_HEIGHT][SCREEN_WIDTH];
+#ifndef OPEN_CL
     float3 fxaa_colours[SCREEN_HEIGHT][SCREEN_WIDTH];
+#endif
     float3 positions[SCREEN_HEIGHT][SCREEN_WIDTH];
     float3 light_positions[SCREEN_HEIGHT][SCREEN_WIDTH];
 };
@@ -111,12 +108,13 @@ struct framebuffer_t
 //void interpolate(float start, float end, vector<float>& result);
 //void interpolateVector(const glm::ivec2& a, const glm::ivec2& b, vector<glm::ivec2>& result);
 //void interpolatePixel(const pixel_t& a, const pixel_t& b, vector<pixel_t>& result);
-void printVector(const char* name, glm::vec3 v);
 void update();
 void draw();
 
 void vertexShader(const vertex_t& v, pixel_t& p);
+#ifndef OPEN_CL
 void pixelShader(const int x, const int y);
+#endif
 
 //void drawPolygonEdges(const vector<vertex_t>& vertices);
 //void drawLineSDL(SDL_Surface* surface, const pixel_t& a, const pixel_t& b, const colour_t& colour);
@@ -126,7 +124,9 @@ void drawPolygon(Triangle& triangle);
 void rasterize(const pixel_t* vertex_pixels, Triangle& triangle);
 void rasterizeLight(const pixel_t* vertex_pixels, Triangle& triangle);
 
+#ifndef OPEN_CL
 void fxaa(int x, int y);
+#endif
 
 #ifdef OPEN_CL
 typedef struct

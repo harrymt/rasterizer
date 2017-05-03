@@ -11,9 +11,7 @@ glm::vec3 cameraPos(0, 0, -FOCAL);
 const float delta_displacement = 0.1f;
 
 glm::vec3 lightPos(0, 0, -FOCAL_LIGHT);// (0, -FOCAL_LIGHT, 0);
-glm::mat3 lightRot(1, 0, 0, 0, 1, 0, 0, 0, 1);
-
-//(1, 0, 0, 0, 0, -1, 0, 1, 0);
+glm::mat3 lightRot(1, 0, 0, 0, 1, 0, 0, 0, 1); //(1, 0, 0, 0, 0, -1, 0, 1, 0);
 
 glm::vec3 lightPower = 4.f * glm::vec3(1, 1, 1);
 glm::vec3 indirectLightPowerPerArea = 0.5f * glm::vec3(1, 1, 1);
@@ -35,7 +33,6 @@ const glm::mat3 rotc(cos(-theta),  0, sin(-theta),
 
 glm::mat3 currentRot(1, 0, 0, 0, 1, 0, 0, 0, 1);
 
-//framedata_t frame_buffer[SCREEN_HEIGHT][SCREEN_WIDTH];
 framebuffer_t frame_buffer;
 float light_buffer[LIGHT_HEIGHT][LIGHT_WIDTH];
 
@@ -46,7 +43,7 @@ void update()
     int t2 = SDL_GetTicks();
     float dt = (float) (t2-t);
     t = t2;
-    cout << "Render time: " << dt << " ms.\n";
+    std::cout << "Render time: " << dt << " ms.\n";
 
     Uint8* keystate = SDL_GetKeyState(0);
     if (keystate[SDLK_w])
@@ -163,6 +160,7 @@ const glm::vec3 fastNormalize(const glm::vec3 &v)
 /**
 * The nearer the pixel.pos3d is to the lightPos, the brighter it should be.
 */
+#ifndef OPEN_CL
 void pixelShader(const int x, const int y)
 {
     glm::vec3 illumination;
@@ -186,10 +184,10 @@ void pixelShader(const int x, const int y)
     }
     else
     {
-        glm::vec3 surfaceToLight = lightPos - fromFloat3(&frame_buffer.positions[y][x]);
+        glm::vec3 surfaceToLight = lightPos - frame_buffer.positions[y][x];
         float r = glm::length(surfaceToLight);
 
-        float ratio = glm::dot(glm::normalize(surfaceToLight), fromFloat3(&frame_buffer.normals[y][x]));
+        float ratio = glm::dot(glm::normalize(surfaceToLight), frame_buffer.normals[y][x]);
         if (ratio < 0) ratio = 0;
 
         glm::vec3 B = lightPower / (4 * pi * r * r);
@@ -197,13 +195,16 @@ void pixelShader(const int x, const int y)
         illumination = D + indirectLightPowerPerArea;
     }
 
-    frame_buffer.colours[y][x] = toFloat3(illumination * fromFloat3(&frame_buffer.colours[y][x]));
+    frame_buffer.colours[y][x] = illumination * frame_buffer.colours[y][x];
 }
+#endif
 
 #ifdef OPEN_CL
 void checkError(cl_int err, const char* op, const int line);
 void initialiseCl();
 void finaliseCl();
+
+const cl_float2 u_texel = { 1.0f / SCREEN_WIDTH, 1.0f / SCREEN_HEIGHT };
 #endif
 
 void draw()
@@ -283,8 +284,22 @@ void draw()
     checkError(err, "enqueueing pixelShader kernel", __LINE__);
     clFinish(ocl.queue);
 
-    err = clEnqueueReadBuffer(ocl.queue, ocl.colours, CL_TRUE, 0, sizeof(cl_float3) * SCREEN_WIDTH * SCREEN_HEIGHT, frame_buffer.colours, 0, nullptr, nullptr);
-    //err = clEnqueueReadBuffer(ocl.queue, ocl.fxaa_colours, CL_TRUE, 0, sizeof(cl_float3) * SCREEN_WIDTH * SCREEN_HEIGHT, frame_buffer.colours, 0, nullptr, nullptr);
+    err = clSetKernelArg(ocl.fxaa, 0, sizeof(cl_mem), &ocl.colours);
+    checkError(err, "setting fxaa arg 0", __LINE__);
+    err = clSetKernelArg(ocl.fxaa, 1, sizeof(cl_mem), &ocl.fxaa_colours);
+    checkError(err, "setting fxaa arg 1", __LINE__);
+    err = clSetKernelArg(ocl.fxaa, 2, sizeof(cl_int), &width);
+    checkError(err, "setting fxaa arg 2", __LINE__);
+    err = clSetKernelArg(ocl.fxaa, 3, sizeof(cl_int), &height);
+    checkError(err, "setting fxaa arg 3", __LINE__);
+    err = clSetKernelArg(ocl.fxaa, 4, sizeof(cl_float2), &u_texel);
+    checkError(err, "setting fxaa arg 4", __LINE__);
+
+    err = clEnqueueNDRangeKernel(ocl.queue, ocl.fxaa, 2, nullptr, global, nullptr, 0, nullptr, nullptr);
+    checkError(err, "enqueueing fxaa kernel", __LINE__);
+    clFinish(ocl.queue);
+
+    err = clEnqueueReadBuffer(ocl.queue, ocl.fxaa_colours, CL_TRUE, 0, sizeof(cl_float3) * SCREEN_WIDTH * SCREEN_HEIGHT, frame_buffer.colours, 0, nullptr, nullptr);
     checkError(err, "reading frame data", __LINE__);
 #else
     #pragma omp parallel for
@@ -302,8 +317,12 @@ void draw()
     {
         for (int j = 0; j < SCREEN_WIDTH; ++j)
         {
-            //fxaa(j, i);
+#ifndef OPEN_CL
+            fxaa(j, i);
+            PutPixelSDL(screen, j, i, frame_buffer.fxaa_colours[i][j]);
+#else
             PutPixelSDL(screen, j, i, fromFloat3(&frame_buffer.colours[i][j]));
+#endif
         }
     }
 
@@ -311,6 +330,7 @@ void draw()
     SDL_UpdateRect(screen, 0, 0, 0, 0);
 }
 
+#ifndef OPEN_CL
 float reducemul = 1.0f/8.0f;
 float reducemin = 1.0f/128.0f;
 float u_strength = 2.5f;
@@ -326,6 +346,7 @@ inline glm::vec3 texture2D(glm::vec2 coords)
 {
     return texture2D(coords.x, coords.y);
 }
+
 
 void fxaa(int x_, int y_)
 {
@@ -358,6 +379,7 @@ void fxaa(int x_, int y_)
     float mono_b = glm::dot(resultB, gray);
     frame_buffer.fxaa_colours[y_][x_] = toFloat3(mono_b < mono_min || mono_b > mono_max ? resultA : resultB);
 }
+#endif
 
 int main()
 {
@@ -405,32 +427,22 @@ void initialiseCl()
     ocl.context = clCreateContext(nullptr, 1, &ocl.device, nullptr, nullptr, &err);
     checkError(err, "creating context", __LINE__);
 
-    FILE* fp;
-#ifdef _MSC_VER
-    fopen_s(&fp, "kernels.cl", "r"); //TODO: LINUX!
-#else
-    fp = fopen("kernels.cl", "r");
-#endif
-    if (!fp)
+    ocl.queue = clCreateCommandQueue(ocl.context, ocl.device, 0, &err);
+    checkError(err, "creating command queue", __LINE__);
+
+    std::ifstream fp;
+    fp.open("kernels.cl");
+    if (!fp.is_open())
     {
         char message[1024];
         printf(message, "could not open OpenCL kernel file: kernels.cl");
         die(message, __LINE__, __FILE__);
     }
 
-    ocl.queue = clCreateCommandQueue(ocl.context, ocl.device, 0, &err);
-    checkError(err, "creating command queue", __LINE__);
-
-    fseek(fp, 0, SEEK_END);
-    long ocl_size = ftell(fp) + 1;
-    char* ocl_src = (char*)calloc(ocl_size, sizeof(char));
-    memset(ocl_src, 0, ocl_size);
-    fseek(fp, 0, SEEK_SET);
-    fread(ocl_src, 1, ocl_size, fp);
-    fclose(fp);
+    std::string file_contents = std::string(std::istreambuf_iterator<char>(fp), std::istreambuf_iterator<char>());
+    const char* ocl_src = file_contents.c_str();
 
     ocl.program = clCreateProgramWithSource(ocl.context, 1, (const char**)&ocl_src, nullptr, &err);
-    free(ocl_src);
     checkError(err, "creating program", __LINE__);
 
     ocl.work_group_size = GROUP_SIZE;
@@ -554,7 +566,8 @@ void checkError(cl_int err, const char *op, const int line)
     {
         fprintf(stderr, "OpenCL error during '%s' on line %d: %d\n", op, line, err);
         fflush(stderr);
-        exit(EXIT_FAILURE);
+        while (true);
+        //exit(EXIT_FAILURE);
     }
 }
 
@@ -563,6 +576,6 @@ void die(const char* message, const int line, const char* file)
     fprintf(stderr, "Error at line %d of file %s:\n", line, file);
     fprintf(stderr, "%s\n", message);
     fflush(stderr);
-    exit(EXIT_FAILURE);
+   // exit(EXIT_FAILURE);
 }
 #endif

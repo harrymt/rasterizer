@@ -11,16 +11,6 @@ extern glm::mat3 lightRot;
 extern framebuffer_t frame_buffer;
 extern float light_buffer[LIGHT_HEIGHT][LIGHT_WIDTH];
 
-void printVector(const char* name, glm::vec3 v)
-{
-    cout << name << ": " << v.x << "," << v.y << "," << v.z << endl;
-}
-
-float rand_f(float min, float max)
-{
-    return min + ((float) rand()) / ((float) (RAND_MAX/(max - min)));
-}
-
 /*
 float interpolate_f(float start, float end, float step, float max)
 {
