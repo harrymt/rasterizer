@@ -15,9 +15,9 @@
 #define FOCAL 2.0f
 #define SCREEN_WIDTH 500
 #define SCREEN_HEIGHT 500
-#define FOCAL_LIGHT 1.0f
-#define LIGHT_WIDTH 500
-#define LIGHT_HEIGHT 500
+#define FOCAL_LIGHT 0.99f
+#define LIGHT_WIDTH 100
+#define LIGHT_HEIGHT 100
 #define FOCAL_LENGTH SCREEN_HEIGHT / FOCAL
 #define FOCAL_LENGTH_LIGHT LIGHT_HEIGHT / FOCAL_LIGHT
 
@@ -46,6 +46,7 @@ struct pixel_t
     pixel_t(int x, int y, float zinv, glm::vec3 pos3d);
     pixel_t(const fpixel_t& p);
     friend pixel_t operator-(const pixel_t& a, const pixel_t& b);
+    friend pixel_t operator+(const pixel_t& a, const pixel_t& b);
 };
 
 struct fpixel_t
@@ -58,6 +59,7 @@ struct fpixel_t
     fpixel_t(const pixel_t& p);
     friend fpixel_t operator/(const fpixel_t& a, const float f);
     friend fpixel_t& operator+=(fpixel_t& a, const fpixel_t& b);
+    friend fpixel_t operator*(int n, const fpixel_t& a);
 };
 
 struct framedata_t
@@ -69,10 +71,10 @@ struct framedata_t
     glm::vec3 pos;
 };
 
-float interpolate_f(float start, float end, float step, float max);
-void interpolate(float start, float end, vector<float>& result);
-void interpolateVector(const glm::ivec2& a, const glm::ivec2& b, vector<glm::ivec2>& result);
-void interpolatePixel(const pixel_t& a, const pixel_t& b, vector<pixel_t>& result);
+//float interpolate_f(float start, float end, float step, float max);
+//void interpolate(float start, float end, vector<float>& result);
+//void interpolateVector(const glm::ivec2& a, const glm::ivec2& b, vector<glm::ivec2>& result);
+//void interpolatePixel(const pixel_t& a, const pixel_t& b, vector<pixel_t>& result);
 void printVector(const char* name, glm::vec3 v);
 void update();
 void draw();
@@ -82,9 +84,11 @@ void pixelShader(const int x, const int y);
 
 //void drawPolygonEdges(const vector<vertex_t>& vertices);
 //void drawLineSDL(SDL_Surface* surface, const pixel_t& a, const pixel_t& b, const colour_t& colour);
-void computePolygonRows(const pixel_t* vertex_pixels, vector<pixel_t>& left_pixels, vector<pixel_t>& right_pixels);
-void drawRows(const vector<pixel_t>& left_pixels, const vector<pixel_t>& right_pixels, const vector<pixel_t>& left_light, const vector<pixel_t>& right_light, glm::vec3 normal, glm::vec3 colour);
+//void computePolygonRows(const pixel_t* vertex_pixels, vector<pixel_t>& left_pixels, vector<pixel_t>& right_pixels);
+//void drawRows(const vector<pixel_t>& left_pixels, const vector<pixel_t>& right_pixels, const vector<pixel_t>& left_light, const vector<pixel_t>& right_light, glm::vec3 normal, glm::vec3 colour);
 void drawPolygon(Triangle& triangle);
+void rasterize(const pixel_t* vertex_pixels, Triangle& triangle);
+void rasterizeLight(const pixel_t* vertex_pixels, Triangle& triangle);
 
 void fxaa(int x, int y);
 

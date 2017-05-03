@@ -2,8 +2,12 @@
 #include "float.h"
 
 extern SDL_Surface* screen;
+extern glm::vec3 cameraPos;
+extern glm::vec3 lightPos;
+extern glm::mat3 currentRot;
 
 extern framedata_t frame_buffer[SCREEN_HEIGHT][SCREEN_WIDTH];
+extern float light_buffer[LIGHT_HEIGHT][LIGHT_WIDTH];
 
 void printVector(const char* name, glm::vec3 v)
 {
@@ -15,6 +19,7 @@ float rand_f(float min, float max)
     return min + ((float) rand()) / ((float) (RAND_MAX/(max - min)));
 }
 
+/*
 float interpolate_f(float start, float end, float step, float max)
 {
     return (end - start) * (step / (max - 1)) + start;
@@ -67,7 +72,7 @@ void interpolate(float start, float end, vector<float>& result)
     {
         result[step] = interpolate_f(start, end, step, result_size);
     }
-}
+}*/
 
 namespace glm
 {
@@ -108,7 +113,7 @@ void drawPolygonEdges(const vector<vertex_t>& vertices)
         drawLineSDL(screen, projected_vertices[i], projected_vertices[j], colour);
     }
     drawLineSDL(screen, projected_vertices[num_vertices-1], projected_vertices[0], colour);
-}*/
+}
 
 void computePolygonRows(const pixel_t* vertex_pixels, vector<pixel_t>& left_pixels, vector<pixel_t>& right_pixels)
 {
@@ -119,11 +124,15 @@ void computePolygonRows(const pixel_t* vertex_pixels, vector<pixel_t>& left_pixe
         min = MIN(min, vertex_pixels[i].y);
         max = MAX(max, vertex_pixels[i].y);
     }
-    size_t nrows = max - min + 1;
+    // We need to cap these at the edges of the screen
+    //min = MAX(min, 0);
+    //max = MIN(max, SCREEN_HEIGHT-1);
+    size_t nrows = max - min + 1; // nrows is strictly bounded now
 
     left_pixels.resize(nrows);
     right_pixels.resize(nrows);
 
+    // This should be correct
     for (size_t i = 0; i < nrows; ++i)
     {
         left_pixels[i].x = +std::numeric_limits<int>::max();
@@ -134,10 +143,18 @@ void computePolygonRows(const pixel_t* vertex_pixels, vector<pixel_t>& left_pixe
     for (size_t i = 0, j = 1; i < 3; ++i, ++j)
     {
         if (i == 2) j = 0;
+        // We need to ensure that we clamp to the bounds of the screen
+        // We will interpolate the line inwards to the bounds of the screen
+        //if ((vertex_pixels[i].y < 0 && vertex_pixels[j].y < 0) || (vertex_pixels[i].y >= SCREEN_HEIGHT && vertex_pixels[j].y >= SCREEN_HEIGHT)) continue;
+        //auto clamped = clampToScreen(vertex_pixels[i], vertex_pixels[j]);
+        //pixel_t cvp1 = clamped.first;
+        //pixel_t cvp2 = clamped.second;
+
+        //vector<pixel_t> edge(std::abs(cvp1.y - cvp2.y) + 1);
+        //interpolatePixel(cvp1, cvp2, edge);
+
         vector<pixel_t> edge(std::abs(vertex_pixels[i].y - vertex_pixels[j].y) + 1);
-
         interpolatePixel(vertex_pixels[i], vertex_pixels[j], edge);
-
         for (pixel_t& pixel : edge)
         {
             pixel_t& left = left_pixels[pixel.y-min];
@@ -181,7 +198,6 @@ void drawRows(const vector<pixel_t>& left_pixels,
             if (row[row_number].y >= SCREEN_HEIGHT || row[row_number].x >= SCREEN_WIDTH
                 || row[row_number].y < 0 || row[row_number].y < 0) continue;
             pixel_t& px = row[row_number];
-            // Back face culling needs to be done for the light version!
             if (px.zinv > frame_buffer[px.y][px.x].depth)
             {
                 framedata_t& data = frame_buffer[px.y][px.x];
@@ -192,21 +208,142 @@ void drawRows(const vector<pixel_t>& left_pixels,
             }
         }
     }
+}*/
+
+void rasterize(const pixel_t* vertex_pixels, Triangle& triangle)
+{
+    int minx = +std::numeric_limits<int>::max();
+    int maxx = -std::numeric_limits<int>::max();
+    int miny = +std::numeric_limits<int>::max();
+    int maxy = -std::numeric_limits<int>::max();
+    for (int i = 0; i < 3; i++)
+    {
+        minx = MIN(minx, vertex_pixels[i].x);
+        maxx = MAX(maxx, vertex_pixels[i].x);
+        miny = MIN(miny, vertex_pixels[i].y);
+        maxy = MAX(maxy, vertex_pixels[i].y);
+    }
+
+    for (int y = miny; y <= maxy; ++y)
+    {
+        if (y < 0 || y >= SCREEN_HEIGHT) continue;
+        for (int x = minx; x <= maxx; ++x)
+        {
+            if (x < 0 || x >= SCREEN_WIDTH) continue;
+            
+            // find barycentric coords
+            // Cramer's rule (Christer Ericson's Real-Time Collision Detection)
+            glm::vec2 v0(vertex_pixels[1].x - vertex_pixels[0].x, vertex_pixels[1].y - vertex_pixels[0].y);
+            glm::vec2 v1(vertex_pixels[2].x - vertex_pixels[0].x, vertex_pixels[2].y - vertex_pixels[0].y);
+            glm::vec2 v2(x - vertex_pixels[0].x, y - vertex_pixels[0].y);
+            float dot00 = glm::dot(v0, v0);
+            float dot01 = glm::dot(v0, v1);
+            float dot11 = glm::dot(v1, v1);
+            float dot20 = glm::dot(v2, v0);
+            float dot21 = glm::dot(v2, v1);
+            float denom = dot00 * dot11 - dot01 * dot01;
+            float a = (dot11 * dot20 - dot01 * dot21) / denom; // vertex 2
+            float b = (dot00 * dot21 - dot01 * dot20) / denom; // vertex 3
+            float c = 1.0f - a - b; // vertex 1
+
+            // if within triangle
+            if (0 <= a && a <= 1 && 0 <= b && b <= 1 && 0 <= c && c <= 1)
+            {
+                float zinv = a * vertex_pixels[1].zinv + b * vertex_pixels[2].zinv + c * vertex_pixels[0].zinv;
+                if (zinv > frame_buffer[y][x].depth)
+                {
+                    framedata_t& data = frame_buffer[y][x];
+                    data.normal = triangle.normal;
+                    data.colour = triangle.color;
+                    data.depth = zinv;
+                    data.pos = (a * vertex_pixels[1].pos3d * vertex_pixels[1].zinv 
+                             + b * vertex_pixels[2].pos3d * vertex_pixels[2].zinv
+                             + c * vertex_pixels[0].pos3d * vertex_pixels[0].zinv) / zinv;
+                }
+            }
+        }
+    }
+}
+
+void rasterizeLight(const pixel_t* vertex_pixels, Triangle& triangle)
+{
+    int minx = +std::numeric_limits<int>::max();
+    int maxx = -std::numeric_limits<int>::max();
+    int miny = +std::numeric_limits<int>::max();
+    int maxy = -std::numeric_limits<int>::max();
+    for (int i = 0; i < 3; i++)
+    {
+        minx = MIN(minx, vertex_pixels[i].x);
+        maxx = MAX(maxx, vertex_pixels[i].x);
+        miny = MIN(miny, vertex_pixels[i].y);
+        maxy = MAX(maxy, vertex_pixels[i].y);
+    }
+
+    for (int y = miny; y <= maxy; ++y)
+    {
+        if (y < 0 || y >= LIGHT_HEIGHT) continue;
+        for (int x = minx; x <= maxx; ++x)
+        {
+            if (x < 0 || x >= LIGHT_WIDTH) continue;
+
+            // find barycentric coords
+            // Cramer's rule (Christer Ericson's Real-Time Collision Detection)
+            glm::vec2 v0(vertex_pixels[1].x - vertex_pixels[0].x, vertex_pixels[1].y - vertex_pixels[0].y);
+            glm::vec2 v1(vertex_pixels[2].x - vertex_pixels[0].x, vertex_pixels[2].y - vertex_pixels[0].y);
+            glm::vec2 v2(x - vertex_pixels[0].x, y - vertex_pixels[0].y);
+            float dot00 = glm::dot(v0, v0);
+            float dot01 = glm::dot(v0, v1);
+            float dot11 = glm::dot(v1, v1);
+            float dot20 = glm::dot(v2, v0);
+            float dot21 = glm::dot(v2, v1);
+            float denom = dot00 * dot11 - dot01 * dot01;
+            float a = (dot11 * dot20 - dot01 * dot21) / denom; // vertex 2
+            float b = (dot00 * dot21 - dot01 * dot20) / denom; // vertex 3
+            float c = 1.0f - a - b; // vertex 1
+
+            // if within triangle
+            if (0 <= a && a <= 1 && 0 <= b && b <= 1 && 0 <= c && c <= 1)
+            {
+                float zinv = a * vertex_pixels[1].zinv + b * vertex_pixels[2].zinv + c * vertex_pixels[0].zinv;
+                if (zinv > light_buffer[y][x])
+                {
+                    light_buffer[y][x] = zinv;
+                }
+            }
+        }
+    }
 }
 
 void drawPolygon(Triangle& triangle)
 {
+    // Is this triangle not even in the scene?
+    // TODO: This needs to also be done for light and independantly
+
     pixel_t vertex_pixels[3];
     pixel_t vertex_light[3];
     vertexShader(triangle.v0, vertex_pixels[0], vertex_light[0]);
     vertexShader(triangle.v1, vertex_pixels[1], vertex_light[1]);
     vertexShader(triangle.v2, vertex_pixels[2], vertex_light[2]);
 
-    vector<pixel_t> left_pixels;
-    vector<pixel_t> right_pixels;
-    vector<pixel_t> left_light;
-    vector<pixel_t> right_light;
-    computePolygonRows(vertex_pixels, left_pixels, right_pixels);
+    bool z = triangle.v0.z < cameraPos.z || triangle.v1.z < cameraPos.z || triangle.v2.z < cameraPos.z;
+    if (!z)
+    {
+        rasterize(vertex_pixels, triangle);
+    }
+
+    z = triangle.v0.z < lightPos.z || triangle.v1.z < lightPos.z || triangle.v2.z < lightPos.z;
+    bool backface = glm::dot(triangle.normal, glm::vec3(0, -1, 0)) > 0;
+
+    if (!z && !backface)
+    {
+        rasterizeLight(vertex_light, triangle);
+    }
+
+    //vector<pixel_t> left_pixels;
+    //vector<pixel_t> right_pixels;
+    //vector<pixel_t> left_light;
+    //vector<pixel_t> right_light;
+    //computePolygonRows(vertex_pixels, left_pixels, right_pixels);
     //computePolygonRows(vertex_light, left_light, right_light);
-    drawRows(left_pixels, right_pixels, left_light, right_light, triangle.normal, triangle.color);
+    //drawRows(left_pixels, right_pixels, left_light, right_light, triangle.normal, triangle.color);
 }

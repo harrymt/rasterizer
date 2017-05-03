@@ -10,10 +10,10 @@ int num_triangles;
 glm::vec3 cameraPos(0, 0, -FOCAL);
 const float delta_displacement = 0.1f;
 
-glm::vec3 lightPos(0, -0.5, -0.7);
+glm::vec3 lightPos(0, -FOCAL_LIGHT, 0);
 glm::mat3 lightRot(1, 0, 0, 0, 0, -1, 0, 1, 0);
 
-glm::vec3 lightPower = 9.f * glm::vec3(1, 1, 1);
+glm::vec3 lightPower = 4.f * glm::vec3(1, 1, 1);
 glm::vec3 indirectLightPowerPerArea = 0.5f * glm::vec3(1, 1, 1);
 glm::vec3 indirectIllumination(0.2f, 0.2f, 0.2f);
 
@@ -58,6 +58,18 @@ void update()
     {
         cameraPos = cameraPos * glm::inverse(currentRot);
         cameraPos[0] += delta_displacement;
+        cameraPos = cameraPos * currentRot;
+    }
+    if (keystate[SDLK_t])
+    {
+        cameraPos = cameraPos * glm::inverse(currentRot);
+        cameraPos[1] -= delta_displacement;
+        cameraPos = cameraPos * currentRot;
+    }
+    if (keystate[SDLK_y])
+    {
+        cameraPos = cameraPos * glm::inverse(currentRot);
+        cameraPos[1] += delta_displacement;
         cameraPos = cameraPos * currentRot;
     }
     if (keystate[SDLK_a])
@@ -158,18 +170,19 @@ void pixelShader(const int x, const int y)
     float zl = lightRel.z;
     int ilx = (int)(FOCAL_LENGTH_LIGHT * xl / zl) + LIGHT_WIDTH / 2;
     int ily = (int)(FOCAL_LENGTH_LIGHT * yl / zl) + LIGHT_HEIGHT / 2;
-    if (// If any of these are true, then the point is not lit by the light at all
-        ilx < 0 || ilx >= LIGHT_WIDTH || ily < 0 || ily >= LIGHT_HEIGHT 
+    //if (// If any of these are true, then the point is not lit by the light at all
+        //ilx < 0 || ilx >= LIGHT_WIDTH || ily < 0 || ily >= LIGHT_HEIGHT  || zl < 0
         // If the above was false, then we are within the field, but if our depth isn't
         // what the light_buffer tells us is the closest depth to the light, then we are
         // obviously occluded
-        || 1 / zl < light_buffer[ily][ilx])
+        //|| zl < light_buffer[ily][ilx]
+        //)
     {
         // There is ambient lighting in the room
         // TODO: We can make it so that cast shadows are slightly more bright than out of field shadows
-        illumination = indirectIllumination;
+        //illumination = indirectIllumination;
     }
-    else
+    //else
     {
         glm::vec3 surfaceToLight = lightPos - px.pos;
         float r = glm::length(surfaceToLight);
@@ -225,8 +238,8 @@ void draw()
     {
         for (int j = 0; j < SCREEN_WIDTH; ++j)
         {
-            //fxaa(j, i);
-            PutPixelSDL(screen, j, i, frame_buffer[i][j].colour);
+            fxaa(j, i);
+            PutPixelSDL(screen, j, i, frame_buffer[i][j].fxaa_colour);
         }
     }
 

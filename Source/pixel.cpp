@@ -42,6 +42,16 @@ fpixel_t operator/(const fpixel_t& a, const float f)
     return fpixel_t(a.x / f, a.y / f, a.zinv / f, a.pos3d / f);
 }
 
+pixel_t operator+(const pixel_t& a, const pixel_t& b)
+{
+    return pixel_t(a.x + b.x, a.y + b.y, a.zinv + b.zinv, a.pos3d + b.pos3d);
+}
+
+fpixel_t operator*(int n, const fpixel_t& a)
+{
+    return fpixel_t(a.x * n, a.y * n, a.zinv * n, (float)n * a.pos3d);
+}
+
 fpixel_t& operator+=(fpixel_t& a, const fpixel_t& b)
 {
     a.x += b.x;
