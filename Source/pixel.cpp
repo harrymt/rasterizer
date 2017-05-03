@@ -1,5 +1,5 @@
 #include "rasterizer.h"
-
+/*
 pixel_t::pixel_t(int x, int y, float zinv, glm::vec3 pos3d)
 {
     this->x = x;
@@ -59,4 +59,4 @@ fpixel_t& operator+=(fpixel_t& a, const fpixel_t& b)
     a.zinv += b.zinv;
     a.pos3d += b.pos3d;
     return a;
-}
+}*/

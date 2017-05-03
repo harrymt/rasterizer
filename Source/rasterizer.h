@@ -10,16 +10,24 @@
 #include <cmath>
 #include "SDLauxiliary.h"
 #include "TestModel.h"
+#include <sstream>
+
+#define OPEN_CL
+
+#ifdef OPEN_CL
+#include <CL/opencl.h>
+#endif
 
 
 #define FOCAL 2.0f
-#define SCREEN_WIDTH 500
-#define SCREEN_HEIGHT 500
+#define SCREEN_WIDTH 512
+#define SCREEN_HEIGHT 512
 #define FOCAL_LIGHT 2.0f
-#define LIGHT_WIDTH 500
-#define LIGHT_HEIGHT 500
+#define LIGHT_WIDTH 512
+#define LIGHT_HEIGHT 512
 #define FOCAL_LENGTH SCREEN_HEIGHT / FOCAL
 #define FOCAL_LENGTH_LIGHT LIGHT_HEIGHT / FOCAL_LIGHT
+#define GROUP_SIZE 256
 
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
@@ -41,15 +49,17 @@ struct pixel_t
     int x, y;
     float zinv;
     glm::vec3 pos3d;
-
+    int lx, ly;
+    float lzinv;
+    /*
     inline pixel_t() {}
     pixel_t(int x, int y, float zinv, glm::vec3 pos3d);
     pixel_t(const fpixel_t& p);
     friend pixel_t operator-(const pixel_t& a, const pixel_t& b);
-    friend pixel_t operator+(const pixel_t& a, const pixel_t& b);
+    friend pixel_t operator+(const pixel_t& a, const pixel_t& b);*/
 };
 
-struct fpixel_t
+/*struct fpixel_t
 {
     float x, y;
     float zinv;
@@ -60,15 +70,41 @@ struct fpixel_t
     friend fpixel_t operator/(const fpixel_t& a, const float f);
     friend fpixel_t& operator+=(fpixel_t& a, const fpixel_t& b);
     friend fpixel_t operator*(int n, const fpixel_t& a);
-};
+};*/
 
-struct framedata_t
+#ifdef OPEN_CL
+inline cl_float3 toFloat3(glm::vec3& v)
 {
-    float depth;
-    glm::vec3 normal;
-    glm::vec3 colour;
-    glm::vec3 fxaa_colour;
-    glm::vec3 pos;
+    cl_float3 ret;
+    memcpy(&ret, &v, sizeof(glm::vec3));
+    return ret;
+}
+
+inline glm::vec3 fromFloat3(cl_float3* v)
+{
+    glm::vec3 ret;
+    memcpy(&ret, v, sizeof(glm::vec3));
+    return ret;
+}
+#else
+#define toFloat3(v) v
+#define fromFloat3(v) (*v)
+#endif
+
+#ifdef OPEN_CL
+typedef cl_float3 float3;
+#else
+typedef glm::vec3 float3;
+#endif
+
+struct framebuffer_t
+{
+    float depths[SCREEN_HEIGHT][SCREEN_WIDTH];
+    float3 normals[SCREEN_HEIGHT][SCREEN_WIDTH];
+    float3 colours[SCREEN_HEIGHT][SCREEN_WIDTH];
+    float3 fxaa_colours[SCREEN_HEIGHT][SCREEN_WIDTH];
+    float3 positions[SCREEN_HEIGHT][SCREEN_WIDTH];
+    float3 light_positions[SCREEN_HEIGHT][SCREEN_WIDTH];
 };
 
 //float interpolate_f(float start, float end, float step, float max);
@@ -79,7 +115,7 @@ void printVector(const char* name, glm::vec3 v);
 void update();
 void draw();
 
-void vertexShader(const vertex_t& v, pixel_t& p, pixel_t& l);
+void vertexShader(const vertex_t& v, pixel_t& p/*, pixel_t& l*/);
 void pixelShader(const int x, const int y);
 
 //void drawPolygonEdges(const vector<vertex_t>& vertices);
@@ -91,5 +127,29 @@ void rasterize(const pixel_t* vertex_pixels, Triangle& triangle);
 void rasterizeLight(const pixel_t* vertex_pixels, Triangle& triangle);
 
 void fxaa(int x, int y);
+
+#ifdef OPEN_CL
+typedef struct
+{
+    cl_device_id device;
+    cl_context context;
+    cl_command_queue queue;
+
+    int num_work_groups;
+    int work_group_size;
+
+    cl_program program;
+    cl_kernel fxaa;
+    cl_kernel pixelShader;
+
+    cl_mem depths;
+    cl_mem normals;
+    cl_mem colours;
+    cl_mem fxaa_colours;
+    cl_mem positions;
+    cl_mem light_depths;
+    cl_mem light_positions;
+} ocl_t;
+#endif
 
 #endif //RASTERIZER_INCLUDE
