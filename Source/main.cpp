@@ -131,7 +131,7 @@ void update()
     }
 }
 
-void vertexShader(const vertex_t& v, pixel_t& p/*, pixel_t& l*/)
+void vertexShader(const vertex_t& v, pixel_t& p)
 {
     glm::vec3 point = (v - cameraPos) * currentRot;
     glm::vec3 lightRel = (v - lightPos) * lightRot;
@@ -148,7 +148,6 @@ void vertexShader(const vertex_t& v, pixel_t& p/*, pixel_t& l*/)
     x = lightRel.x;
     y = lightRel.y;
     z = lightRel.z;
-    //l.pos3d = v;
     p.lzinv = 1 / z;
     p.lx = (int)(FOCAL_LENGTH_LIGHT * x / z) + LIGHT_HEIGHT / 2;
     p.ly = (int)(FOCAL_LENGTH_LIGHT * y / z) + LIGHT_WIDTH / 2;

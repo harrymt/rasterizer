@@ -115,7 +115,7 @@ void printVector(const char* name, glm::vec3 v);
 void update();
 void draw();
 
-void vertexShader(const vertex_t& v, pixel_t& p/*, pixel_t& l*/);
+void vertexShader(const vertex_t& v, pixel_t& p);
 void pixelShader(const int x, const int y);
 
 //void drawPolygonEdges(const vector<vertex_t>& vertices);
