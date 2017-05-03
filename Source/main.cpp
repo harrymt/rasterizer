@@ -10,8 +10,10 @@ int num_triangles;
 glm::vec3 cameraPos(0, 0, -FOCAL);
 const float delta_displacement = 0.1f;
 
-glm::vec3 lightPos(0, -FOCAL_LIGHT, 0);
-glm::mat3 lightRot(1, 0, 0, 0, 0, -1, 0, 1, 0);
+glm::vec3 lightPos(0, 0, -FOCAL_LIGHT);// (0, -FOCAL_LIGHT, 0);
+glm::mat3 lightRot(1, 0, 0, 0, 1, 0, 0, 0, 1);
+
+//(1, 0, 0, 0, 0, -1, 0, 1, 0);
 
 glm::vec3 lightPower = 4.f * glm::vec3(1, 1, 1);
 glm::vec3 indirectLightPowerPerArea = 0.5f * glm::vec3(1, 1, 1);
@@ -170,19 +172,26 @@ void pixelShader(const int x, const int y)
     float zl = lightRel.z;
     int ilx = (int)(FOCAL_LENGTH_LIGHT * xl / zl) + LIGHT_WIDTH / 2;
     int ily = (int)(FOCAL_LENGTH_LIGHT * yl / zl) + LIGHT_HEIGHT / 2;
-    //if (// If any of these are true, then the point is not lit by the light at all
-        //ilx < 0 || ilx >= LIGHT_WIDTH || ily < 0 || ily >= LIGHT_HEIGHT  || zl < 0
+    /*if (ilx != x)
+    {
+        std::cout << lightRel.x << " " << lightRel.y << " " << lightRel.z << std::endl;
+        std::cout << px.pos.x << " " << px.pos.y << " " << px.pos.z << std::endl;
+        std::cout << "x: " << ilx << " " << x << std::endl;
+    }*/
+    //if (px.depth != light_buffer[ily][ilx]) std::cout << "what?" << px.depth << " " << light_buffer[y][x] << std::endl;
+    if (// If any of these are true, then the point is not lit by the light at all
+        ilx < 0 || ilx >= LIGHT_WIDTH || ily < 0 || ily >= LIGHT_HEIGHT  || zl < 0
         // If the above was false, then we are within the field, but if our depth isn't
         // what the light_buffer tells us is the closest depth to the light, then we are
         // obviously occluded
-        //|| zl < light_buffer[ily][ilx]
-        //)
+        //|| 1/zl < light_buffer[ily][ilx]
+        )
     {
         // There is ambient lighting in the room
         // TODO: We can make it so that cast shadows are slightly more bright than out of field shadows
-        //illumination = indirectIllumination;
+        illumination = indirectIllumination;
     }
-    //else
+    else
     {
         glm::vec3 surfaceToLight = lightPos - px.pos;
         float r = glm::length(surfaceToLight);
@@ -224,7 +233,7 @@ void draw()
         drawPolygon(triangles[i]);
     }
 
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for (int i = 0; i < SCREEN_HEIGHT; ++i)
     {
         for (int j = 0; j < SCREEN_WIDTH; ++j)
@@ -238,8 +247,8 @@ void draw()
     {
         for (int j = 0; j < SCREEN_WIDTH; ++j)
         {
-            fxaa(j, i);
-            PutPixelSDL(screen, j, i, frame_buffer[i][j].fxaa_colour);
+            //fxaa(j, i);
+            PutPixelSDL(screen, j, i, frame_buffer[i][j].colour);
         }
     }
 

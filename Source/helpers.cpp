@@ -332,7 +332,7 @@ void drawPolygon(Triangle& triangle)
     }
 
     z = triangle.v0.z < lightPos.z || triangle.v1.z < lightPos.z || triangle.v2.z < lightPos.z;
-    bool backface = glm::dot(triangle.normal, glm::vec3(0, -1, 0)) > 0;
+    bool backface = glm::dot(triangle.normal, glm::vec3(0, 0, 1)) > 0;
 
     if (!z && !backface)
     {
