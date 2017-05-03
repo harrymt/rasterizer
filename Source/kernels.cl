@@ -1,6 +1,6 @@
 // Pixel Shader Constants
 #define INDIRECT_ILLUMINATION (float3)(0.2f)
-#define LIGHT_POWER (float3)(4.0f)
+#define LIGHT_POWER (float3)(16.0f)
 #define INDIRECT_LIGHT_POWER_PER_AREA (float3)(0.5f)
 
 // FXAA Constants
@@ -31,8 +31,8 @@ kernel void pixelShader(
     float lx = lpos.x;
     float ly = lpos.y;
     float lz = lpos.z;
-    int ilx = (int)(light_focal * lx / lz) + width / 2;
-    int ily = (int)(light_focal * ly / lz) + height / 2;
+    int ilx = (int)(light_focal * lx / lz) + light_width / 2;
+    int ily = (int)(light_focal * ly / lz) + light_height / 2;
 
     // GPU's don't like branching, but hey ho...
     if (ilx < 0 || ilx >= light_width
@@ -46,9 +46,11 @@ kernel void pixelShader(
         float3 surfaceToLight = light_pos - positions[idx];
         float r = length(surfaceToLight);
 
-        float ratio = fmax(dot(normalize(surfaceToLight), normals[idx]), 0);
+        float ratio = dot(normalize(surfaceToLight), normals[idx]);
+        if (ratio < 0) ratio = 0;
 
-        float3 D = LIGHT_POWER * (ratio / (4.0f * 3.14159f * r * r));
+        float3 B = LIGHT_POWER / (4.0f * 3.14159f * r * r);
+        float3 D = B * ratio;
         illumination = D + INDIRECT_LIGHT_POWER_PER_AREA;
     }
 

@@ -13,7 +13,7 @@ const float delta_displacement = 0.1f;
 glm::vec3 lightPos(0, 0, -FOCAL_LIGHT);// (0, -FOCAL_LIGHT, 0);
 glm::mat3 lightRot(1, 0, 0, 0, 1, 0, 0, 0, 1); //(1, 0, 0, 0, 0, -1, 0, 1, 0);
 
-glm::vec3 lightPower = 4.f * glm::vec3(1, 1, 1);
+glm::vec3 lightPower = 16.f * glm::vec3(1, 1, 1);
 glm::vec3 indirectLightPowerPerArea = 0.5f * glm::vec3(1, 1, 1);
 glm::vec3 indirectIllumination(0.2f, 0.2f, 0.2f);
 
@@ -150,13 +150,6 @@ void vertexShader(const vertex_t& v, pixel_t& p)
     p.ly = (int)(FOCAL_LENGTH_LIGHT * y / z) + LIGHT_WIDTH / 2;
 }
 
-const glm::vec3 fastNormalize(const glm::vec3 &v)
-{
-    const float len_sq = v.x * v.x + v.y * v.y + v.z * v.z;
-    const float len_inv = sqrt(len_sq);
-    return glm::vec3(v.x * len_inv, v.y * len_inv, v.z * len_inv);
-}
-
 /**
 * The nearer the pixel.pos3d is to the lightPos, the brighter it should be.
 */
@@ -190,7 +183,7 @@ void pixelShader(const int x, const int y)
         float ratio = glm::dot(glm::normalize(surfaceToLight), frame_buffer.normals[y][x]);
         if (ratio < 0) ratio = 0;
 
-        glm::vec3 B = lightPower / (4 * pi * r * r);
+        glm::vec3 B = lightPower / (4.0f * pi * r * r);
         glm::vec3 D = B * ratio;
         illumination = D + indirectLightPowerPerArea;
     }

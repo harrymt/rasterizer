@@ -33,7 +33,7 @@
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 
-const float pi = (float) atan(1.0);
+const float pi = (float) atan(1.0)*4;
 
 struct pixel_t;
 struct fpixel_t;
