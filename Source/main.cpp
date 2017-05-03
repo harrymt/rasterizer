@@ -145,8 +145,8 @@ void vertexShader(const vertex_t& v, pixel_t& p, pixel_t& l)
     z = lightRel.z;
     //l.pos3d = v;
     l.zinv = 1 / z;
-    l.x = (int)(FOCAL_LENGTH_LIGHT * y / z) + LIGHT_HEIGHT / 2;
-    l.y = (int)(FOCAL_LENGTH_LIGHT * x / z) + LIGHT_WIDTH / 2;
+    l.x = (int)(FOCAL_LENGTH_LIGHT * x / z) + LIGHT_HEIGHT / 2;
+    l.y = (int)(FOCAL_LENGTH_LIGHT * y / z) + LIGHT_WIDTH / 2;
 }
 
 const glm::vec3 fastNormalize(const glm::vec3 &v)
@@ -184,7 +184,7 @@ void pixelShader(const int x, const int y)
         // If the above was false, then we are within the field, but if our depth isn't
         // what the light_buffer tells us is the closest depth to the light, then we are
         // obviously occluded
-        //|| 1/zl < light_buffer[ily][ilx]
+        || 1/zl < light_buffer[ily][ilx] -0.005f
         )
     {
         // There is ambient lighting in the room
