@@ -154,40 +154,51 @@ void vertexShader(const vertex_t& v, pixel_t& p)
 * The nearer the pixel.pos3d is to the lightPos, the brighter it should be.
 */
 #ifndef OPEN_CL
+#define NUM_SAMPLES 16
+#define ADJUSTMENT 0.025f
 void pixelShader(const int x, const int y)
 {
     glm::vec3 illumination;
 
-    float xl = frame_buffer.light_positions[y][x].x;
-    float yl = frame_buffer.light_positions[y][x].y;
-    float zl = frame_buffer.light_positions[y][x].z;
-    int ilx = (int)(FOCAL_LENGTH_LIGHT * xl / zl) + LIGHT_WIDTH / 2;
-    int ily = (int)(FOCAL_LENGTH_LIGHT * yl / zl) + LIGHT_HEIGHT / 2;
-    if (// If any of these are true, then the point is not lit by the light at all
-        ilx < 0 || ilx >= LIGHT_WIDTH || ily < 0 || ily >= LIGHT_HEIGHT  || zl < 0
-        // If the above was false, then we are within the field, but if our depth isn't
-        // what the light_buffer tells us is the closest depth to the light, then we are
-        // obviously occluded
-        || 1/zl < light_buffer[ily][ilx] - 0.005f
-        )
+    
+
+    for (float i = -1.0f; i < 1.0f; i += 2.0f / NUM_SAMPLES)
     {
-        // There is ambient lighting in the room
-        // TODO: We can make it so that cast shadows are slightly more bright than out of field shadows
-        illumination = indirectIllumination;
+        for (float j = -1.0f; j < 1.0f; j += 2.0f / NUM_SAMPLES)
+        {
+            float xl = frame_buffer.light_positions[y][x].x + j*ADJUSTMENT;
+            float yl = frame_buffer.light_positions[y][x].y + i*ADJUSTMENT;
+            float zl = frame_buffer.light_positions[y][x].z;
+            int ilx = (int)(FOCAL_LENGTH_LIGHT * xl / zl) + LIGHT_WIDTH / 2;
+            int ily = (int)(FOCAL_LENGTH_LIGHT * yl / zl) + LIGHT_HEIGHT / 2;
+
+            if (// If any of these are true, then the point is not lit by the light at all
+                ilx < 0 || ilx >= LIGHT_WIDTH || ily < 0 || ily >= LIGHT_HEIGHT || zl < 0
+                // If the above was false, then we are within the field, but if our depth isn't
+                // what the light_buffer tells us is the closest depth to the light, then we are
+                // obviously occluded
+                || 1 / zl < light_buffer[ily][ilx] - 0.005f
+                )
+            {
+                // There is ambient lighting in the room
+                // TODO: We can make it so that cast shadows are slightly more bright than out of field shadows
+                illumination += indirectIllumination;
+            }
+            else
+            {
+                glm::vec3 surfaceToLight = lightPos - frame_buffer.positions[y][x];
+                float r = glm::length(surfaceToLight);
+
+                float ratio = glm::dot(glm::normalize(surfaceToLight), frame_buffer.normals[y][x]);
+                if (ratio < 0) ratio = 0;
+
+                glm::vec3 B = lightPower / (4.0f * pi * r * r);
+                glm::vec3 D = B * ratio;
+                illumination += D + indirectLightPowerPerArea;
+            }
+        }
     }
-    else
-    {
-        glm::vec3 surfaceToLight = lightPos - frame_buffer.positions[y][x];
-        float r = glm::length(surfaceToLight);
-
-        float ratio = glm::dot(glm::normalize(surfaceToLight), frame_buffer.normals[y][x]);
-        if (ratio < 0) ratio = 0;
-
-        glm::vec3 B = lightPower / (4.0f * pi * r * r);
-        glm::vec3 D = B * ratio;
-        illumination = D + indirectLightPowerPerArea;
-    }
-
+    illumination /= (NUM_SAMPLES * NUM_SAMPLES);
     frame_buffer.colours[y][x] = illumination * frame_buffer.colours[y][x];
 }
 #endif
@@ -559,8 +570,8 @@ void checkError(cl_int err, const char *op, const int line)
     {
         fprintf(stderr, "OpenCL error during '%s' on line %d: %d\n", op, line, err);
         fflush(stderr);
-        while (true);
-        //exit(EXIT_FAILURE);
+        //while (true);
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -569,6 +580,6 @@ void die(const char* message, const int line, const char* file)
     fprintf(stderr, "Error at line %d of file %s:\n", line, file);
     fprintf(stderr, "%s\n", message);
     fflush(stderr);
-   // exit(EXIT_FAILURE);
+    exit(EXIT_FAILURE);
 }
 #endif

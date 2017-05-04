@@ -318,14 +318,10 @@ void rasterizeLight(const pixel_t* vertex_pixels, Triangle& triangle)
 
 void drawPolygon(Triangle& triangle)
 {
-    // Is this triangle not even in the scene?
-    // TODO: This needs to also be done for light and independantly
-
     pixel_t vertex_pixels[3];
-    //pixel_t vertex_light[3];
-    vertexShader(triangle.v0, vertex_pixels[0]/*, vertex_light[0]*/);
-    vertexShader(triangle.v1, vertex_pixels[1]/*, vertex_light[1]*/);
-    vertexShader(triangle.v2, vertex_pixels[2]/*, vertex_light[2]*/);
+    vertexShader(triangle.v0, vertex_pixels[0]);
+    vertexShader(triangle.v1, vertex_pixels[1]);
+    vertexShader(triangle.v2, vertex_pixels[2]);
 
     bool z = triangle.v0.z < cameraPos.z || triangle.v1.z < cameraPos.z || triangle.v2.z < cameraPos.z;
     if (!z)

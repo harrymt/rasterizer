@@ -2,6 +2,9 @@
 #define INDIRECT_ILLUMINATION (float3)(0.2f)
 #define LIGHT_POWER (float3)(16.0f)
 #define INDIRECT_LIGHT_POWER_PER_AREA (float3)(0.5f)
+#define NUM_SAMPLES 3
+#define ADJUSTMENT 0.0185f
+#define SHADOW_MAP_BIAS 0.005f
 
 // FXAA Constants
 #define REDUCE_MUL 1.0f/8.0f
@@ -26,33 +29,51 @@ kernel void pixelShader(
     int y = get_global_id(1);
     int idx = y * width + x;
 
-    float3 illumination;
+    float3 illumination = (float)(0.0f);
+    float3 pos = positions[idx];
     float3 lpos = light_positions[idx];
-    float lx = lpos.x;
-    float ly = lpos.y;
-    float lz = lpos.z;
-    int ilx = (int)(light_focal * lx / lz) + light_width / 2;
-    int ily = (int)(light_focal * ly / lz) + light_height / 2;
+    float3 normal = normals[idx];
 
-    // GPU's don't like branching, but hey ho...
-    if (ilx < 0 || ilx >= light_width
-     || ily < 0 || ily >= light_height
-     || lz < 0 || 1.0f/lz < light_depths[ily * light_width + ilx] - 0.005f)
+#if NUM_SAMPLES != 1
+    for (float i = -1.0f; i < 1.0f; i += 2.0f/NUM_SAMPLES)
     {
-        illumination = INDIRECT_ILLUMINATION;
+        for (float j = -1.0f; j < 1.0f; j += 2.0f/NUM_SAMPLES)
+        {
+#else
+            float i = 0;
+            float j = 0;
+#endif
+            float lx = lpos.x + j*ADJUSTMENT;
+            float ly = lpos.y + i*ADJUSTMENT;
+            float lz = lpos.z;
+            int ilx = (int)(light_focal * lx / lz) + light_width / 2;
+            int ily = (int)(light_focal * ly / lz) + light_height / 2;
+
+            float ldepth = light_depths[ily * light_width + ilx];
+
+            // GPU's don't like branching, but hey ho...
+            if (ilx < 0 || ilx >= light_width
+             || ily < 0 || ily >= light_height
+             || lz < 0 || 1.0f/lz < ldepth - SHADOW_MAP_BIAS)
+            {
+                illumination += INDIRECT_ILLUMINATION;
+            }
+            else
+            {
+                float3 surfaceToLight = light_pos - pos;
+                float r = length(surfaceToLight);
+
+                float ratio = fmax(dot(normalize(surfaceToLight), normal), 0);
+
+                float3 D = LIGHT_POWER * (ratio / (4.0f * 3.14159f * r * r));
+                illumination += D + INDIRECT_LIGHT_POWER_PER_AREA;
+            }
+#if NUM_SAMPLES != 1
+        }
     }
-    else
-    {
-        float3 surfaceToLight = light_pos - positions[idx];
-        float r = length(surfaceToLight);
+#endif
 
-        float ratio = fmax(dot(normalize(surfaceToLight), normals[idx]), 0);
-
-        float3 D = LIGHT_POWER * (ratio / (4.0f * 3.14159f * r * r));
-        illumination = D + INDIRECT_LIGHT_POWER_PER_AREA;
-    }
-
-    colours[idx] = illumination * colours[idx];
+    colours[idx] = (illumination / (NUM_SAMPLES * NUM_SAMPLES)) * colours[idx];
 }
 
 inline float3 __OVERLOADABLE__ f_texture2D(global float3* texture, int width, int height, float x, float y)
