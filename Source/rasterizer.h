@@ -13,7 +13,7 @@
 #include <sstream>
 #include <fstream>
 
-#define OPEN_CL
+//#define OPEN_CL
 
 #ifdef OPEN_CL
 #include <CL/opencl.h>

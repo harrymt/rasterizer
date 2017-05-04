@@ -154,18 +154,22 @@ void vertexShader(const vertex_t& v, pixel_t& p)
 * The nearer the pixel.pos3d is to the lightPos, the brighter it should be.
 */
 #ifndef OPEN_CL
-#define NUM_SAMPLES 16
-#define ADJUSTMENT 0.025f
+#define NUM_SAMPLES 1
+#define ADJUSTMENT 0.0185f
 void pixelShader(const int x, const int y)
 {
     glm::vec3 illumination;
 
     
-
+#if NUM_SAMPLES != 1
     for (float i = -1.0f; i < 1.0f; i += 2.0f / NUM_SAMPLES)
     {
         for (float j = -1.0f; j < 1.0f; j += 2.0f / NUM_SAMPLES)
         {
+#else
+            float i = 0;
+            float j = 0;
+#endif
             float xl = frame_buffer.light_positions[y][x].x + j*ADJUSTMENT;
             float yl = frame_buffer.light_positions[y][x].y + i*ADJUSTMENT;
             float zl = frame_buffer.light_positions[y][x].z;
@@ -196,8 +200,10 @@ void pixelShader(const int x, const int y)
                 glm::vec3 D = B * ratio;
                 illumination += D + indirectLightPowerPerArea;
             }
+#if NUM_SAMPLES != 1
         }
     }
+#endif
     illumination /= (NUM_SAMPLES * NUM_SAMPLES);
     frame_buffer.colours[y][x] = illumination * frame_buffer.colours[y][x];
 }
