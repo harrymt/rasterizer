@@ -46,11 +46,9 @@ kernel void pixelShader(
         float3 surfaceToLight = light_pos - positions[idx];
         float r = length(surfaceToLight);
 
-        float ratio = dot(normalize(surfaceToLight), normals[idx]);
-        if (ratio < 0) ratio = 0;
+        float ratio = fmax(dot(normalize(surfaceToLight), normals[idx]), 0);
 
-        float3 B = LIGHT_POWER / (4.0f * 3.14159f * r * r);
-        float3 D = B * ratio;
+        float3 D = LIGHT_POWER * (ratio / (4.0f * 3.14159f * r * r));
         illumination = D + INDIRECT_LIGHT_POWER_PER_AREA;
     }
 
