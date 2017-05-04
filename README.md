@@ -1,52 +1,50 @@
 ## Rasterizer
 
-Rasterizer for the University of Bristol Computer Graphics course (course work 2).
+Rasterizer for the University of Bristol Computer Graphics course (course work 2), links with the [Ray Tracer](https://github.com/harrymt/ray_tracer/).
 
-### Extensions - 76% predicted grade
+See the [report](report.pdf) for a full overview.
 
-***FOR BOTH PARTS WE NEED TO ENSURE THE CAMERA MOVEMENT WORKS CORRECTLY, HARRY CAN YOU ENSURE THIS IS THE CASE!***
-
-#### Ray tracer - 90% * 0.5
-    - Base : 50%
-    - Optimisations : 4%
-    - Parallelisation : 4%
-    - Soft shadows : 4%
-    - Anti Aliasing : 4%
-    - General Model loading 4%
-    - Colour bleeding : 10%
-    - Spacial datastructures (Photon map) : 10%
-
-#### Rasterizer - 62% * 0.5
-    - Base : 50%
-    - Towards deferred rendering
-    - Light source changes
-    - Lightbuffer
-    - Shadows : 4%
-    - GPU Rendering (FXAA and Pixel Shading can be moved to GPU)
-    - Anti Aliasing (FXAA) : 4%
-    - Optimisations : 4%
-    - Soft Shadows
-
-https://youtu.be/nlUu7aPz-H4
-https://youtu.be/siGBA8brz9E
-https://youtu.be/HQDrsd6H4bY
 
 ## How to Build
 
-Simply use the [Makefile](Makefile) to build the program by running the following command in the directory.
+- Download a copy of [GLM](http://glm.g-truc.net) and place it inside of the root directory.
+- Then use [Makefile](Makefile) to build the program by running the following command in the directory.
 
 ```
 make
 ```
 
-A rendered image of the [Cornell Box](https://en.wikipedia.org/wiki/Cornell_box) should appear.
-Note: SDL should be installed on the machine.
+- A rendered image of the [Cornell Box](https://en.wikipedia.org/wiki/Cornell_box) should appear.
+
 
 ## Latest Rendered Image
 
 ![Screenshot](screenshot.bmp "Rendered Image")
 
-## How to setup project for Visual Studio 201X for Windows
+## Features
+
+Basic components of a rasteriser were implemented along with the following extensions:
+
+- Optimisations
+- Shadows
+- Soft Shadows
+- Interpolation Changes & Basic Clipping
+- Anti-Aliasing - FXAA
+- Parallelisation - GPU
+- Frame buffer and Deferred Rendering
+- Directional Lights - Light as a Camera
+
+### YouTube Videos
+
+Three clips show the rasteriser in action:
+
+- [50 shadow samples CPU vs GPU](https://youtu.be/nlUu7aPz-H4)
+- [2048 * 2048 CPU vs GPU](https://youtu.be/siGBA8brz9E)
+- [3 Soft Shadow Samples GPU](https://youtu.be/HQDrsd6H4bY)
+
+
+
+## Setup project with Visual Studio 201X for Windows
 
 - Get a GLM folder and the correct version of SDL, we are using SDL 1.2.5.
 - Place `glm` folder inside of Source, for ease
