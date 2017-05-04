@@ -9,6 +9,7 @@ Triangle* triangles;
 int num_triangles;
 glm::vec3 cameraPos(0, 0, -FOCAL);
 const float delta_displacement = 0.1f;
+float rotationAngle = 0;
 
 glm::vec3 lightPos(0, 0, -FOCAL_LIGHT);// (0, -FOCAL_LIGHT, 0);
 glm::mat3 lightRot(1, 0, 0, 0, 1, 0, 0, 0, 1); //(1, 0, 0, 0, 0, -1, 0, 1, 0);
@@ -17,25 +18,25 @@ glm::vec3 lightPower = 16.f * glm::vec3(1, 1, 1);
 glm::vec3 indirectLightPowerPerArea = 0.5f * glm::vec3(1, 1, 1);
 glm::vec3 indirectIllumination(0.2f, 0.2f, 0.2f);
 
+
+
 #ifdef OPEN_CL
 ocl_t ocl;
 #endif
 
-const float theta = D2R(5);
-
-const glm::mat3 rota(cos(theta),  0, sin(theta),
-                     0,           1, 0,
-                     -sin(theta), 0, cos(theta));
-
-const glm::mat3 rotc(cos(-theta),  0, sin(-theta),
-                     0,            1, 0,
-                     -sin(-theta), 0, cos(-theta));
-
-glm::mat3 currentRot(1, 0, 0, 0, 1, 0, 0, 0, 1);
-
 framebuffer_t frame_buffer;
 float light_buffer[LIGHT_HEIGHT][LIGHT_WIDTH];
 
+
+const float theta = D2R(5);
+glm::mat3 currentRot(1, 0, 0, 0, 1, 0, 0, 0, 1);
+
+void updateRotation() {
+    float s = sin(rotationAngle);
+    currentRot[0][0] = currentRot[2][2] = cos(rotationAngle);
+    currentRot[0][2] = s;
+    currentRot[2][0] = -s;
+}
 
 void update()
 {
@@ -44,61 +45,68 @@ void update()
     float dt = (float) (t2-t);
     t = t2;
     std::cout << "Render time: " << dt << " ms.\n";
+    
+    // Need to compute these every update
+    glm::vec3 right(currentRot[0][0], currentRot[0][1], currentRot[0][2]);
+    glm::vec3 forward(currentRot[2][0], currentRot[2][1], currentRot[2][2]);
 
     Uint8* keystate = SDL_GetKeyState(0);
     if (keystate[SDLK_w])
     {
-        cameraPos = cameraPos * glm::inverse(currentRot);
-        cameraPos[2] += delta_displacement;
-        cameraPos = cameraPos * currentRot;
+        cameraPos += theta * forward;
+        updateRotation();
     }
     if (keystate[SDLK_s])
     {
-        cameraPos = cameraPos * glm::inverse(currentRot);
-        cameraPos[2] -= delta_displacement;
-        cameraPos = cameraPos * currentRot;
+        cameraPos -= theta * forward;
+        updateRotation();
     }
+    // Strafe
     if (keystate[SDLK_d])
     {
-        cameraPos = cameraPos * glm::inverse(currentRot);
-        cameraPos[0] += delta_displacement;
-        cameraPos = cameraPos * currentRot;
+        cameraPos += theta * right;
+        updateRotation();
     }
+    if (keystate[SDLK_a])
+    {
+        cameraPos -= theta * right;
+        updateRotation();
+    }
+
     if (keystate[SDLK_t])
     {
         cameraPos = cameraPos * glm::inverse(currentRot);
         cameraPos[1] -= delta_displacement;
         cameraPos = cameraPos * currentRot;
+        updateRotation();
     }
     if (keystate[SDLK_y])
     {
         cameraPos = cameraPos * glm::inverse(currentRot);
         cameraPos[1] += delta_displacement;
         cameraPos = cameraPos * currentRot;
-    }
-    if (keystate[SDLK_a])
-    {
-        cameraPos = cameraPos * glm::inverse(currentRot);
-        cameraPos[0] -= delta_displacement;
-        cameraPos = cameraPos * currentRot;
+        updateRotation();
     }
     if (keystate[SDLK_q])
     {
-        currentRot = currentRot * rota;
-        cameraPos = cameraPos * rota;
+        rotationAngle += theta;
+        updateRotation();
     }
     if (keystate[SDLK_e])
     {
-        currentRot = currentRot * rotc;
-        cameraPos = cameraPos * rotc;
+        rotationAngle -= theta;
+        updateRotation();
     }
+
+
+
     if (keystate[SDLK_r])
     {
         cameraPos = {0, 0, -FOCAL};
         lightPos = {0, -0.5, -0.7};
         currentRot = glm::mat3(1, 0, 0, 0, 1, 0, 0, 0, 1);
+        rotationAngle = 0;
     }
-
 
     if (keystate[SDLK_UP])
     {
@@ -398,6 +406,8 @@ int main()
 #endif
     screen = InitializeSDL(SCREEN_WIDTH, SCREEN_HEIGHT);
     t = SDL_GetTicks();
+    
+    currentRot[1][1] = 1.0f;
 
     // Fill triangles with test model
     std::vector<Triangle> triangles_;
