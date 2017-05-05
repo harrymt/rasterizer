@@ -36,11 +36,12 @@ Basic components of a rasteriser were implemented along with the following exten
 
 ### YouTube Videos
 
-Three clips show the rasteriser in action:
+Four clips show the rasteriser in action:
 
 - [50 shadow samples CPU vs GPU](https://youtu.be/nlUu7aPz-H4)
 - [2048 * 2048 CPU vs GPU](https://youtu.be/siGBA8brz9E)
 - [3 Soft Shadow Samples GPU](https://youtu.be/HQDrsd6H4bY)
+- [25 Soft Shadow Samples, 2048 * 2048 Shadow Map GPU](https://www.youtube.com/watch?v=LAGSdhaoWEs)
 
 
 
