@@ -1,4 +1,4 @@
-## Rasterizer
+# Rasterizer
 
 Rasterizer for the University of Bristol Computer Graphics course (course work 2), links with the [Ray Tracer](https://github.com/harrymt/ray_tracer/).
 
